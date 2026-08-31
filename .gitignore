@@ -1,0 +1,24 @@
+# Сборка
+.gradle
+.kotlin
+**/build/
+!src/**/build/
+
+# Локальные настройки машины: пути к SDK
+local.properties
+
+# IDE
+.idea
+*.iml
+captures
+.externalNativeBuild
+.cxx
+
+# Xcode оставляет свои следы даже без проекта — фреймворк собирается Gradle
+xcuserdata
+
+# macOS
+.DS_Store
+
+# Claude Code: локальные настройки, у каждого свои
+.claude/settings.local.json
