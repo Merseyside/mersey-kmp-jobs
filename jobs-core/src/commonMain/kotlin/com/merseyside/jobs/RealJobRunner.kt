@@ -199,7 +199,7 @@ class RealJobRunner(
                     job.markFailed(error)
                 }
             } finally {
-                withContext(NonCancellable) { releaseHoldIfIdle() }
+                withContext(NonCancellable) { releaseHoldIfIdle(finished = job) }
             }
         }
     }
@@ -214,8 +214,18 @@ class RealJobRunner(
         working.forEach { job -> job.coroutine?.cancelAndJoin() }
     }
 
-    private suspend fun releaseHoldIfIdle() {
-        val idle = mutex.withLock { jobs.values.none(RunningJob<*>::isWorking) }
+    /**
+     * Отпускает удержание, когда работать стало нечему.
+     *
+     * @param finished задача, которая прямо сейчас доигрывает свой последний шаг.
+     * Её приходится исключать: вызов приходит из её же корутины, а та до самого
+     * возврата остаётся активной — задача увидела бы работающей саму себя, и
+     * удержание не сняли бы никогда.
+     */
+    private suspend fun releaseHoldIfIdle(finished: RunningJob<*>? = null) {
+        val idle = mutex.withLock {
+            jobs.values.none { job -> job !== finished && job.isWorking }
+        }
 
         if (idle) hold.release()
     }
