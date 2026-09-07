@@ -3,6 +3,8 @@ package com.merseyside.jobs.hold
 import android.content.Context
 import android.content.Intent
 import androidx.core.content.ContextCompat
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.withTimeoutOrNull
 
 /**
  * Удержание процесса на Android — сервис на переднем плане.
@@ -31,9 +33,27 @@ class AndroidProcessHold(
             context,
             JobForegroundService.intent(context, notification())
         )
+
+        // Удержание взято не тогда, когда сервис попросили подняться, а когда
+        // он поднялся. Разница важна для короткой работы: она успевает
+        // кончиться раньше старта сервиса, и остановка приходит до того, как
+        // тот вышел на передний план, — за это система валит приложение целиком
+        withTimeoutOrNull(START_TIMEOUT_MILLIS) {
+            JobForegroundService.isStarted.first { started -> started }
+        }
     }
 
     override suspend fun release() {
         context.stopService(Intent(context, JobForegroundService::class.java))
+    }
+
+    private companion object {
+
+        /**
+         * Сколько ждать выхода сервиса на передний план. Обычно это десятки
+         * миллисекунд; предел стоит на случай, когда система запуск не дала —
+         * ждать её вечно нельзя, работа всё равно должна идти.
+         */
+        const val START_TIMEOUT_MILLIS = 5_000L
     }
 }

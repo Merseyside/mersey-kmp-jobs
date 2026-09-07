@@ -8,6 +8,7 @@ import androidx.core.app.NotificationChannelCompat
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.app.ServiceCompat
+import kotlinx.coroutines.flow.MutableStateFlow
 
 /**
  * Сервис на переднем плане: ради него всё и затевалось.
@@ -19,6 +20,11 @@ import androidx.core.app.ServiceCompat
 class JobForegroundService : Service() {
 
     override fun onBind(intent: Intent?): IBinder? = null
+
+    override fun onDestroy() {
+        isStarted.value = false
+        super.onDestroy()
+    }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         val notification = intent?.readNotification() ?: lastNotification
@@ -67,6 +73,8 @@ class JobForegroundService : Service() {
             built,
             ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC
         )
+
+        isStarted.value = true
     }
 
     private fun Intent.readNotification(): JobNotification? {
@@ -80,6 +88,16 @@ class JobForegroundService : Service() {
     }
 
     internal companion object {
+
+        /**
+         * Вышел ли сервис на передний план.
+         *
+         * Нужно тому, кто его поднимает: остановка, пришедшая раньше
+         * [ServiceCompat.startForeground], валит приложение целиком — система
+         * считает, что сервис так и не начал работу. А короткая задача успевает
+         * кончиться быстрее, чем система донесёт до сервиса команду запуска.
+         */
+        val isStarted = MutableStateFlow(false)
 
         /**
          * Последнее описание уведомления. Живёт в процессе, а не в задаче: если
