@@ -4,6 +4,8 @@ plugins {
     alias(catalogPlugins.plugins.kotlin.multiplatform)
     alias(catalogPlugins.plugins.android.kotlin.multiplatform.library)
     alias(catalogPlugins.plugins.kotlin.serialization)
+
+    `maven-publish-plugin`
 }
 
 kotlin {

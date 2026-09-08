@@ -1,3 +1,14 @@
+/**
+ * Координаты артефактов. Версия здесь, а не в каталоге версий: каталог знает
+ * версии чужих библиотек, а эта — своя, и меняется она вместе с самим кодом.
+ */
+allprojects {
+    plugins.withId("org.gradle.maven-publish") {
+        group = "io.github.merseyside"
+        version = "0.1.0"
+    }
+}
+
 plugins {
     alias(catalogPlugins.plugins.kotlin.multiplatform) apply false
     alias(catalogPlugins.plugins.kotlin.serialization) apply false

@@ -11,5 +11,9 @@ dependencies {
         implementation(android.gradle)
         implementation(kotlin.gradle)
         implementation(kotlin.serialization)
+
+        // Публикация артефактов: плагин подключается скриптом
+        // publication/maven-publish-plugin
+        implementation(maven.publish.plugin)
     }
 }
