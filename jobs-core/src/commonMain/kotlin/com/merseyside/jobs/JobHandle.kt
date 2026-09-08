@@ -20,13 +20,17 @@ interface JobHandle<out R : Any> {
 /**
  * Ждёт конца работы. Возвращает результат, а падение задачи пробрасывает тому,
  * кто ждал.
+ *
+ * Ожидание следующей попытки концом не считается: задача, которой не хватило
+ * сети, ещё сделается, и ждущий дождётся её результата — пусть и позже.
  */
 suspend fun <R : Any> JobHandle<R>.await(): R =
     when (val finished = state.first { value -> value.isFinished }) {
         is JobState.Success -> finished.result
         is JobState.Failed -> throw finished.error
         JobState.Cancelled -> throw JobCancelledException(id)
-        is JobState.Running -> error("Не может быть: состояние отфильтровано выше")
+        is JobState.Running, is JobState.Waiting ->
+            error("Не может быть: состояние отфильтровано выше")
     }
 
 class JobCancelledException(val jobId: JobId) : RuntimeException("Задача $jobId отменена")

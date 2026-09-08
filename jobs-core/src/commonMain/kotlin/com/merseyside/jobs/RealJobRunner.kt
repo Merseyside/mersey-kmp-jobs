@@ -12,13 +12,16 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancelAndJoin
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeoutOrNull
 import kotlinx.serialization.json.Json
 
 /**
@@ -71,9 +74,17 @@ class RealJobRunner(
             if (running != null) {
                 val typed = running.cast<R>()
 
-                // Незавершённая, но остановленная — это задача, у которой система
-                // забрала время. Продолжаем ту же самую, а не заводим вторую
-                if (!typed.isWorking) launchJob(spec, params, typed)
+                when {
+                    // Ждёт следующей попытки — просьба запустить её же означает
+                    // «попробуй сейчас»: человек нажал «повторить» и стоять до
+                    // конца паузы ему незачем
+                    typed.isWaiting -> typed.wakeUp()
+
+                    // Незавершённая, но остановленная — это задача, у которой
+                    // система забрала время. Продолжаем ту же самую, а не
+                    // заводим вторую
+                    !typed.isAlive -> launchJob(spec, params, typed)
+                }
 
                 return@withLock typed
             }
@@ -137,7 +148,16 @@ class RealJobRunner(
                 // Вид работы не зарегистрирован — поднять её некому. Запись
                 // остаётся: спек может появиться в следующей версии приложения
                 val spec = specs[record.type] ?: return@forEach
-                if (jobs[record.id]?.isWorking == true) return@forEach
+
+                val existing = jobs[record.id]
+
+                if (existing?.isAlive == true) {
+                    // Ожидающую торопим: приложение снова на экране, и сеть,
+                    // скорее всего, вернулась вместе с ним
+                    if (existing.isWaiting) existing.wakeUp()
+
+                    return@forEach
+                }
 
                 resume(spec, record)
             }
@@ -166,42 +186,98 @@ class RealJobRunner(
         params: P,
         job: RunningJob<R>
     ) {
-        hold.acquire()
-
         job.coroutine = scope.launch {
             try {
-                val saved = storage.steps(job.id).toMutableMap()
+                // Попыток столько, сколько понадобится: временная ошибка на то и
+                // временная. От вечного тиканья спасает не счётчик, а растущая
+                // пауза — через несколько минут это одна попытка в две минуты
+                while (true) {
+                    job.markRunning()
 
-                val jobScope = RealJobScope(
-                    jobId = job.id,
-                    saved = saved,
-                    memory = job.memory,
-                    storage = storage,
-                    json = json,
-                    onProgress = job::report
-                )
+                    val outcome = runAttempt(spec, params, job)
 
-                val result = with(spec) { jobScope.execute(params) }
+                    if (outcome == null) return@launch
 
-                // NonCancellable: задача уже сделала работу, и запись о ней
-                // нужно закрыть, даже если отмена пришла в этот самый момент
-                withContext(NonCancellable) {
-                    storage.removeJob(job.id)
-                    job.markSuccess(result)
-                }
-            } catch (cancellation: CancellationException) {
-                // Прогресс остаётся в хранилище, запись — активной: это пауза,
-                // а не конец. Отказ от задачи оформляет cancel()
-                throw cancellation
-            } catch (error: Throwable) {
-                withContext(NonCancellable) {
-                    storage.setActive(job.id, isActive = false)
-                    job.markFailed(error)
+                    // Пока ждём, удержание процесса отпускаем: держать сервис
+                    // переднего плана с уведомлением ради сна — обманывать и
+                    // систему, и человека
+                    withContext(NonCancellable) { releaseHoldIfIdle() }
+
+                    // Просьба запустить эту же работу будит нас раньше срока
+                    withTimeoutOrNull(retryDelay(outcome)) { job.awaitWake() }
                 }
             } finally {
                 withContext(NonCancellable) { releaseHoldIfIdle(finished = job) }
             }
         }
+    }
+
+    /**
+     * Одна попытка. Возвращает номер провалившейся попытки, если работу стоит
+     * повторить, и null — если всё кончилось: успехом или окончательной
+     * неудачей.
+     */
+    private suspend fun <P : Any, R : Any> runAttempt(
+        spec: JobSpec<P, R>,
+        params: P,
+        job: RunningJob<R>
+    ): Int? {
+        hold.acquire()
+
+        try {
+            val saved = storage.steps(job.id).toMutableMap()
+
+            val jobScope = RealJobScope(
+                jobId = job.id,
+                saved = saved,
+                memory = job.memory,
+                storage = storage,
+                json = json,
+                onProgress = job::report
+            )
+
+            val result = with(spec) { jobScope.execute(params) }
+
+            // NonCancellable: задача уже сделала работу, и запись о ней
+            // нужно закрыть, даже если отмена пришла в этот самый момент
+            withContext(NonCancellable) {
+                storage.removeJob(job.id)
+                job.markSuccess(result)
+            }
+
+            return null
+        } catch (cancellation: CancellationException) {
+            // Прогресс остаётся в хранилище, запись — активной: это пауза,
+            // а не конец. Отказ от задачи оформляет cancel()
+            throw cancellation
+        } catch (error: Throwable) {
+            // Помочь нечем — говорим сразу: сколько ни повторяй, ответ будет
+            // тем же, а человек всё это время будет ждать впустую
+            if (!spec.isRetryable(error)) {
+                withContext(NonCancellable) {
+                    storage.setActive(job.id, isActive = false)
+                    job.markFailed(error)
+                }
+
+                return null
+            }
+
+            // Запись остаётся активной: убьют процесс — задача поднимется
+            // следующим restore(), как поднимается прерванная
+            return withContext(NonCancellable) { job.markWaiting(error) }
+        }
+    }
+
+    /**
+     * Через сколько пробовать снова. Пауза растёт вдвое с каждой неудачей и
+     * упирается в потолок: первые попытки идут часто — сеть чаще всего
+     * возвращается сразу, — а дальше работа тикает редко и почти ничего не
+     * стоит.
+     */
+    private fun retryDelay(attempt: Int): Long {
+        val grown = RETRY_BASE_MILLIS shl (attempt - 1).coerceAtMost(RETRY_MAX_SHIFT)
+
+        return grown.coerceAtMost(RETRY_MAX_MILLIS)
     }
 
     /**
@@ -233,6 +309,18 @@ class RealJobRunner(
     @Suppress("UNCHECKED_CAST")
     private fun <R : Any> RunningJob<*>.cast(): RunningJob<R> = this as RunningJob<R>
 
+    private companion object {
+
+        /** Пауза после первой неудачи. Дальше удваивается. */
+        const val RETRY_BASE_MILLIS = 10_000L
+
+        /** Потолок паузы: реже раза в две минуты пробовать незачем. */
+        const val RETRY_MAX_MILLIS = 120_000L
+
+        /** Больше сдвигать бессмысленно — потолок и так ближе. */
+        const val RETRY_MAX_SHIFT = 8
+    }
+
     /**
      * Задача в реестре: её состояние для наблюдателей и её корутина.
      */
@@ -251,11 +339,50 @@ class RealJobRunner(
 
         var coroutine: Job? = null
 
-        val isWorking: Boolean
+        /**
+         * Просьба попробовать прямо сейчас, не досыпая паузу. Буфер на одну
+         * заявку: пока задача спит, разбудить её дважды — то же самое, что
+         * разбудить один раз.
+         */
+        private val wake = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
+
+        /** Сколько попыток уже провалилось. По нему растёт пауза. */
+        private var attempts = 0
+
+        /** Корутина жива: либо работает, либо спит до следующей попытки. */
+        val isAlive: Boolean
             get() = coroutine?.isActive == true
+
+        /** Ждёт следующей попытки. Процесс ради этого не удерживают. */
+        val isWaiting: Boolean
+            get() = state.value is JobState.Waiting
+
+        /** Работает прямо сейчас — в отличие от спящей, которая ничего не делает. */
+        val isWorking: Boolean
+            get() = isAlive && !isWaiting
 
         fun report(progress: JobProgress) {
             mutableState.value = JobState.Running(progress)
+        }
+
+        fun markRunning() {
+            mutableState.value = JobState.Running(progress = null)
+        }
+
+        /** Отмечает неудачную попытку и возвращает её номер. */
+        fun markWaiting(error: Throwable): Int {
+            attempts++
+            mutableState.value = JobState.Waiting(error = error, attempt = attempts)
+
+            return attempts
+        }
+
+        fun wakeUp() {
+            wake.tryEmit(Unit)
+        }
+
+        suspend fun awaitWake() {
+            wake.first()
         }
 
         fun markSuccess(result: R) {
