@@ -3,8 +3,9 @@ plugins {
 }
 
 /**
- * Плагины в catalog-version-plugins объявлены без версий: версия приходит отсюда,
- * из classpath сборки. Поэтому buildSrc нужен даже одному-единственному модулю.
+ * The plugins in catalog-version-plugins are declared without versions: the
+ * version comes from here, from the build classpath. That is why buildSrc is
+ * needed even by a single module.
  */
 dependencies {
     with(catalogGradle) {
@@ -12,7 +13,7 @@ dependencies {
         implementation(kotlin.gradle)
         implementation(kotlin.serialization)
 
-        // Публикация артефактов: плагин подключается скриптом
+        // Publishing the artifacts: the plugin is applied by a script
         // publication/maven-publish-plugin
         implementation(maven.publish.plugin)
     }

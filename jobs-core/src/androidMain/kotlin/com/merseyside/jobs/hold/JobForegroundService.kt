@@ -11,11 +11,12 @@ import androidx.core.app.ServiceCompat
 import kotlinx.coroutines.flow.MutableStateFlow
 
 /**
- * Сервис на переднем плане: ради него всё и затевалось.
+ * The foreground service: the whole thing was started for its sake.
  *
- * Пока он жив, система считает приложение занятым делом и не выгружает его —
- * даже когда пользователь ушёл на другой экран. Своей логики у сервиса нет:
- * работу выполняют корутины рантайма, а сервис только держит процесс.
+ * While it is alive, the system considers the app busy with something and does
+ * not unload it — even when the user has gone to another screen. The service
+ * has no logic of its own: the work is done by the runtime's coroutines, and
+ * the service only holds the process.
  */
 class JobForegroundService : Service() {
 
@@ -29,9 +30,9 @@ class JobForegroundService : Service() {
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         val notification = intent?.readNotification() ?: lastNotification
 
-        // Уведомление показывается всегда, даже когда показывать нечего.
-        // Сервис, поднятый через startForegroundService и не сделавший этого за
-        // пять секунд, валит приложение целиком — остановиться молча нельзя
+        // The notification is always shown, even when there is nothing to show.
+        // A service raised through startForegroundService that fails to do so
+        // within five seconds brings the whole app down — it cannot stop quietly
         showForeground(notification ?: PLACEHOLDER)
 
         if (notification == null) {
@@ -39,12 +40,13 @@ class JobForegroundService : Service() {
             return START_NOT_STICKY
         }
 
-        // Запоминаем на случай, если система поднимет сервис без наших данных
+        // Remembered in case the system raises the service without our data
         lastNotification = notification
 
-        // Процесс убили вместе с сервисом — поднимать его самому незачем:
-        // корутин с работой в новом процессе всё равно нет. Незавершённые
-        // задачи поднимет рантайм, когда приложение откроют снова
+        // The process was killed along with the service — there is no point in
+        // raising it by itself: there are no coroutines with the work in the new
+        // process anyway. Unfinished jobs will be revived by the runtime when
+        // the app is opened again
         return START_NOT_STICKY
     }
 
@@ -90,25 +92,27 @@ class JobForegroundService : Service() {
     internal companion object {
 
         /**
-         * Вышел ли сервис на передний план.
+         * Whether the service has reached the foreground.
          *
-         * Нужно тому, кто его поднимает: остановка, пришедшая раньше
-         * [ServiceCompat.startForeground], валит приложение целиком — система
-         * считает, что сервис так и не начал работу. А короткая задача успевает
-         * кончиться быстрее, чем система донесёт до сервиса команду запуска.
+         * Needed by whoever raises it: a stop that came earlier than
+         * [ServiceCompat.startForeground] brings the whole app down — the
+         * system decides the service never started its work. And a short job
+         * manages to end faster than the system delivers the start command to
+         * the service.
          */
         val isStarted = MutableStateFlow(false)
 
         /**
-         * Последнее описание уведомления. Живёт в процессе, а не в задаче: если
-         * система поднимет сервис без наших данных, показывать всё равно что-то
-         * нужно, и лучше то же самое, чем заглушку.
+         * The last notification description. Lives in the process, not in the
+         * job: if the system raises the service without our data, something
+         * still has to be shown, and the same thing is better than a stub.
          */
         private var lastNotification: JobNotification? = null
 
         /**
-         * Запасное уведомление на случай, когда описания нет вовсе. Живёт доли
-         * секунды: сервис показывает его и тут же останавливается.
+         * The spare notification for the case when there is no description at
+         * all. Lives for a fraction of a second: the service shows it and stops
+         * right away.
          */
         private val PLACEHOLDER = JobNotification(
             channelId = "jobs",

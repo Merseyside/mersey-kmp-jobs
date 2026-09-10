@@ -1,40 +1,40 @@
 package com.merseyside.jobs
 
 /**
- * Чем задача занята с точки зрения того, кто её ждёт.
+ * What the job is busy with, as seen by whoever waits for it.
  */
 sealed interface JobState<out R : Any> {
 
-    /** Работает. Доклада может ещё не быть — задача не обязана его слать. */
+    /** Running. There may be no report yet — a job is not obliged to send one. */
     data class Running(val progress: JobProgress?) : JobState<Nothing>
 
     data class Success<out R : Any>(val result: R) : JobState<R>
 
     /**
-     * Упала так, что помочь нечем: прав нет, ключ не тот, плейлиста больше не
-     * существует. Пройденные шаги остались в хранилище: повторный запуск с теми
-     * же параметрами продолжит с места падения, а не с начала.
+     * Failed beyond help: no permission, wrong key, the playlist no longer
+     * exists. The passed steps stay in the storage: a repeated start with the
+     * same params continues from the point of failure, not from the beginning.
      */
     data class Failed(val error: Throwable) : JobState<Nothing>
 
     /**
-     * Упала по временной причине и ждёт следующей попытки: сети нет, сервис
-     * ответил отказом «слишком часто» или молчит.
+     * Failed for a temporary reason and waits for the next attempt: no
+     * network, the service answered "too many requests" or stays silent.
      *
-     * Это не конец работы, а пауза: тот, кто ждёт результата, продолжает ждать.
-     * Для показывающего экрана такая задача — по-прежнему «делается», просто
-     * дольше обычного.
+     * This is not the end of the work but a pause: whoever waits for the
+     * result keeps waiting. For the screen showing it such a job is still
+     * "in progress", just longer than usual.
      *
-     * @param attempt какая попытка провалилась, считая с первой.
+     * @param attempt which attempt failed, counting from the first one.
      */
     data class Waiting(val error: Throwable, val attempt: Int) : JobState<Nothing>
 
-    /** Отменена — либо вызывающей стороной, либо системой, забравшей время. */
+    /** Cancelled — either by the caller or by the system taking time away. */
     data object Cancelled : JobState<Nothing>
 
     /**
-     * Работа кончилась — тем или иным способом. Ожидание следующей попытки
-     * концом не считается: задача ещё сделается.
+     * The work is over — one way or another. Waiting for the next attempt does
+     * not count as an end: the job will still be done.
      */
     val isFinished: Boolean
         get() = this !is Running && this !is Waiting

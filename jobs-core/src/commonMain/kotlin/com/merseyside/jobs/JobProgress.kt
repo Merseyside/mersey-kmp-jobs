@@ -1,10 +1,10 @@
 package com.merseyside.jobs
 
 /**
- * Доклад задачи о том, чем она занята прямо сейчас.
+ * A job's report on what it is busy with right now.
  *
- * Библиотека в содержимое не заглядывает: свой тип объявляет тот, кто пишет
- * задачу, и он же приводит доклад обратно к этому типу на экране. Прогресс
- * никогда не сохраняется — это ход работы, а не её состояние.
+ * The library does not look inside: whoever writes the job declares their own
+ * type and casts the report back to it on the screen. Progress is never
+ * stored — it is the course of the work, not its state.
  */
 interface JobProgress

@@ -4,37 +4,39 @@ import kotlinx.serialization.KSerializer
 import kotlinx.serialization.serializer
 
 /**
- * То, что задача получает внутрь себя. Через него она размечает свою работу на
- * шаги и докладывает о ходе дела.
+ * What a job is given on the inside. Through it the job splits its work into
+ * steps and reports how things are going.
  */
 interface JobScope {
 
     val jobId: JobId
 
     /**
-     * Шаг с контрольной точкой: результат ложится в хранилище, и при повторном
-     * проходе тело не выполняется вовсе — вернётся сохранённое.
+     * A step with a checkpoint: the result goes into the storage, and on a
+     * repeated pass the body is not executed at all — the saved value is
+     * returned.
      *
-     * @param key имя шага. Должно совпадать от прохода к проходу, иначе
-     * сохранённый результат не найдётся. Шаги в цикле нумеруются вручную.
+     * @param key the step name. It must match from pass to pass, otherwise the
+     * saved result will not be found. Steps inside a loop are numbered by hand.
      */
     suspend fun <T> step(key: String, serializer: KSerializer<T>, body: suspend () -> T): T
 
     /**
-     * Шаг без хранилища: результат остаётся только в памяти.
+     * A step without the storage: the result stays in memory only.
      *
-     * Для данных, которые правила поставщика разрешают держать лишь на время
-     * показа — каталоги музыки, например. Пока процесс жив, повторный запуск
-     * задачи такой шаг не переиграет; после перезапуска он выполнится заново.
+     * For data a provider's rules allow keeping for the time of showing it
+     * only — music catalogues, for instance. While the process is alive, a
+     * repeated start of the job does not replay such a step; after a restart
+     * it runs again.
      */
     suspend fun <T> memoryStep(key: String, body: suspend () -> T): T
 
-    /** Рассказать, чем сейчас занята. Доезжает до экрана как есть. */
+    /** Tell what the job is busy with now. Reaches the screen as it is. */
     suspend fun report(progress: JobProgress)
 }
 
 /**
- * То же, что [JobScope.step], но сериализатор выводится из типа.
+ * The same as [JobScope.step], but the serializer is inferred from the type.
  */
 suspend inline fun <reified T> JobScope.step(
     key: String,

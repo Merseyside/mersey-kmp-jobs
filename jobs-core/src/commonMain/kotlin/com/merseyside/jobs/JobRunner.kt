@@ -1,60 +1,72 @@
 package com.merseyside.jobs
 
 /**
- * Место, где живут долгие задачи.
+ * Where long-running jobs live.
  *
- * Задача, запущенная здесь, не привязана к экрану: смена экрана, поворот
- * устройства и уход приложения в фон её не прерывают. Экран берёт [JobHandle]
- * и смотрит на прогресс; исчезновение экрана работу не отменяет.
+ * A job started here is not tied to a screen: navigation, device rotation and
+ * the app going to background do not interrupt it. A screen takes a
+ * [JobHandle] and watches the progress; the screen going away does not cancel
+ * the work.
  *
- * Все действия приостанавливаемые: внутри они ходят в хранилище, а порядок
- * запусков и отмен нужно соблюдать строго — без этого один и тот же запуск,
- * сделанный дважды, разошёлся бы на две задачи.
+ * Every action is suspending: they touch the storage, and the order of starts
+ * and cancellations must be kept strictly — otherwise the very same start,
+ * made twice, would split into two jobs.
  */
 interface JobRunner {
 
     /**
-     * Запускает работу и сразу возвращает ручку — дожидаться конца здесь не нужно.
+     * Starts the work and returns a handle right away — no need to await the
+     * end here.
      *
-     * Такая же работа, уже идущая сейчас, вторично не запускается: вернётся
-     * ручка от неё. «Такая же» — это совпадение вида задачи и всех параметров.
+     * The same work already running is not started a second time: its handle
+     * is returned instead. "The same" means a matching job type and matching
+     * params.
      *
-     * Если эта работа однажды прерывалась, её сохранённые шаги подхватятся:
-     * пройденное заново не выполняется.
+     * If this work was once interrupted, its saved steps are picked up: what
+     * is already done is not done again.
      */
     suspend fun <P : Any, R : Any> start(spec: JobSpec<P, R>, params: P): JobHandle<R>
 
-    /** Ручка идущей задачи — для экрана, который открыли заново. */
+    /** Handle of a running job — for a screen opened again. */
     suspend fun <R : Any> handle(id: JobId): JobHandle<R>?
 
     /**
-     * Незаконченная работа этого вида, если она сейчас идёт.
+     * Unfinished work of this type, if any is running now.
      *
-     * Для экрана, который открылся и не знает, что успело начаться до него:
-     * идентификатор задачи ему хранить негде, а вид работы известен всегда.
-     * Вместе с ручкой отдаются параметры — по ним экран восстанавливает то,
-     * с чего работа начиналась.
+     * For a screen that just opened and does not know what started before it:
+     * it has nowhere to keep a job id, while the job type is always known. The
+     * params come along with the handle — from them the screen restores what
+     * the work started with.
      */
     suspend fun <P : Any, R : Any> current(spec: JobSpec<P, R>): OngoingJob<P, R>?
 
     /**
-     * Останавливает работу и забывает её прогресс. Это отказ от задачи, а не
-     * пауза: следующий запуск начнётся с чистого листа.
+     * Every unfinished job of this kind.
+     *
+     * A screen may have several of them at once — three task statuses moved
+     * one after another, each waiting for the network on its own. Which of them
+     * is which the screen tells by the params.
+     */
+    suspend fun <P : Any, R : Any> ongoing(spec: JobSpec<P, R>): List<OngoingJob<P, R>>
+
+    /**
+     * Stops the work and forgets its progress. This is giving the job up, not
+     * pausing it: the next start begins from scratch.
      */
     suspend fun cancel(id: JobId)
 
     /**
-     * Поднимает работу, прерванную не по своей воле: перезапуском приложения
-     * или системой, забравшей время у фонового процесса.
+     * Revives work interrupted against its will: by an app restart or by the
+     * system taking time away from a background process.
      *
-     * Вызывается при старте приложения и при возвращении его на экран. Задачи,
-     * закончившиеся сами — успехом или ошибкой — не поднимаются.
+     * Called on app start and when the app comes back to the screen. Jobs that
+     * finished on their own — with success or with an error — are not revived.
      */
     suspend fun restore()
 }
 
 /**
- * Идущая работа: с чем её завели и как за ней следить.
+ * Running work: what it was started with and how to watch it.
  */
 data class OngoingJob<P : Any, R : Any>(
     val params: P,
