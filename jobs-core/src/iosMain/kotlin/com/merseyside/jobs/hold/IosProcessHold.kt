@@ -32,13 +32,18 @@ class IosProcessHold : ProcessHold {
     private var taskId: UIBackgroundTaskIdentifier = UIBackgroundTaskInvalid
 
     /** UIApplication answers the main thread only — hence the switch. */
-    override suspend fun acquire() = withContext(Dispatchers.Main) {
-        if (taskId != UIBackgroundTaskInvalid) return@withContext
+    override suspend fun acquire(): Boolean = withContext(Dispatchers.Main) {
+        if (taskId != UIBackgroundTaskInvalid) return@withContext true
 
         taskId = UIApplication.sharedApplication.beginBackgroundTaskWithName(TASK_NAME) {
             mutableExpirations.tryEmit(Unit)
             endTask()
         }
+
+        // The system has nothing to postpone with: the app has already spent
+        // its background time. Starting the work now means being cut short on
+        // the first step
+        taskId != UIBackgroundTaskInvalid
     }
 
     override suspend fun release() = withContext(Dispatchers.Main) { endTask() }

@@ -18,14 +18,17 @@ sealed interface JobState<out R : Any> {
     data class Failed(val error: Throwable) : JobState<Nothing>
 
     /**
-     * Failed for a temporary reason and waits for the next attempt: no
-     * network, the service answered "too many requests" or stays silent.
+     * Waits for its time: the attempt failed for a temporary reason — no
+     * network, the service answered "too many requests" or stays silent — or
+     * has not begun at all, because the system refused the hold of the process
+     * to an app that is not on the screen.
      *
      * This is not the end of the work but a pause: whoever waits for the
      * result keeps waiting. For the screen showing it such a job is still
      * "in progress", just longer than usual.
      *
-     * @param attempt which attempt failed, counting from the first one.
+     * @param attempt which attempt failed, counting from the first one. Zero
+     * while nothing has been tried yet.
      */
     data class Waiting(val error: Throwable, val attempt: Int) : JobState<Nothing>
 

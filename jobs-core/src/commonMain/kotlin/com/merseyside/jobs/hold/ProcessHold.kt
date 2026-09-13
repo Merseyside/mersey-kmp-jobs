@@ -13,8 +13,19 @@ import kotlinx.coroutines.flow.emptyFlow
  */
 interface ProcessHold {
 
-    /** Called when the first running job appears. */
-    suspend fun acquire()
+    /**
+     * Called before the work of a job begins.
+     *
+     * @return whether the hold was taken. A refusal is an ordinary answer, not
+     * a breakdown: the system gives no hold to an app that is not on the
+     * screen — since Android 12 a foreground service cannot be raised from the
+     * background, and iOS refuses the postponement to an app that has spent
+     * its time already. In response the runtime puts the job to sleep until it
+     * is woken from the screen. Starting anyway is worse than waiting: the
+     * work would be cut short mid-step, and the system would take the whole
+     * app down along with it.
+     */
+    suspend fun acquire(): Boolean
 
     /** Called when no running jobs are left. */
     suspend fun release()
@@ -40,7 +51,10 @@ interface ProcessHold {
  */
 object NoProcessHold : ProcessHold {
 
-    override suspend fun acquire() = Unit
+    // Nothing is taken, and the answer is still yes: there is nothing here for
+    // the system to refuse, and a job must not be left asleep waiting for a
+    // permission that nobody is going to give
+    override suspend fun acquire() = true
 
     override suspend fun release() = Unit
 }

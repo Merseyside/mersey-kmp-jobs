@@ -42,3 +42,14 @@ class JobCancelledException(val jobId: JobId) : RuntimeException("Job $jobId is 
  */
 class JobUndoResumedException(val jobId: JobId) :
     RuntimeException("Undo of job $jobId resumed after a restart")
+
+/**
+ * The system did not give the hold of the process: on Android that means the
+ * app is not on the screen, on iOS that the background time is spent.
+ *
+ * Not a failure of the work itself and not its end — the job has not even
+ * started the attempt. It sleeps until the app comes back to the screen and
+ * [JobRunner.restore] wakes it.
+ */
+class ProcessHoldRefusedException(val jobId: JobId) :
+    RuntimeException("Job $jobId was refused the hold of the process")
