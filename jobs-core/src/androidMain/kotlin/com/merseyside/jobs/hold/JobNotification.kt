@@ -3,14 +3,15 @@ package com.merseyside.jobs.hold
 import androidx.annotation.DrawableRes
 
 /**
- * Уведомление сервиса, который держит процесс живым.
+ * The notification of the service that keeps the process alive.
  *
- * Android показывает его всё время работы задач — это условие, на котором
- * система соглашается не убивать приложение. Тексты и значок приходят из
- * приложения: своих строк библиотека не имеет и переводить их не умеет.
+ * Android shows it for the whole time the jobs are running — that is the
+ * condition on which the system agrees not to kill the app. The texts and the
+ * icon come from the app: the library has no strings of its own and cannot
+ * translate them.
  *
- * @param channelId постоянное имя канала уведомлений.
- * @param channelName как канал называется в системных настройках.
+ * @param channelId the permanent name of the notification channel.
+ * @param channelName how the channel is called in the system settings.
  */
 data class JobNotification(
     val channelId: String,

@@ -25,7 +25,7 @@ dependencyResolutionManagement {
             }
         }
         mavenCentral()
-        // Каталоги версий публикуются сюда из ../izidesk-mobile/mersey-libs/catalog-versions
+        // The version catalogs are published here from ../izidesk-mobile/mersey-libs/catalog-versions
         mavenLocal()
     }
 
@@ -42,5 +42,5 @@ dependencyResolutionManagement {
 
 rootProject.name = "mersey-kmp-jobs"
 
-// Долгие задачи: контракт, рантайм и удержание процесса на каждой платформе
+// Long-running jobs: the contract, the runtime and the process hold on every platform
 include(":jobs-core")

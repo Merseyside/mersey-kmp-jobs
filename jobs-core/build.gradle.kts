@@ -27,13 +27,16 @@ kotlin {
         commonMain.dependencies {
             implementation(common.coroutines)
 
-            // api: задача сама описывает, как сохранять свои шаги, и объявляет
-            // сериализаторы в собственном коде
+            // api: a job sets the pauses between attempts with its own TimeUnit
+            api(common.mersey.time)
+
+            // api: a job itself describes how to save its steps and declares the
+            // serializers in its own code
             api(common.serialization)
         }
 
         androidMain.dependencies {
-            // Уведомление сервиса, работающего на переднем плане
+            // The notification of the foreground service
             implementation(androidLibs.androidx.core)
         }
 

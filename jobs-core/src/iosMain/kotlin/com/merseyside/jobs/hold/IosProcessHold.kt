@@ -10,16 +10,18 @@ import platform.UIKit.UIBackgroundTaskIdentifier
 import platform.UIKit.UIBackgroundTaskInvalid
 
 /**
- * Удержание процесса на iOS — отсрочка засыпания.
+ * Holding the process on iOS — a postponement of falling asleep.
  *
- * Сервисов, работающих сколько нужно, на iOS нет и не будет. Есть просьба
- * «не усыпляй меня прямо сейчас»: система даёт на неё считанные десятки секунд
- * после ухода приложения в фон, а сколько именно — решает сама.
+ * Services running for as long as needed do not exist on iOS and never will.
+ * What exists is a request "do not put me to sleep right now": the system
+ * grants mere tens of seconds after the app goes to background, and how many
+ * exactly it decides itself.
  *
- * Поэтому это не фоновая работа, а возможность доделать начатое и сохранить
- * шаг. Когда время подходит к концу, iOS зовёт обработчик истечения — рантайм
- * получает его через [expirations] и сворачивает задачи сам. Не свернуть их
- * вовремя хуже: тогда систему убивает приложение целиком.
+ * So this is not background work but a chance to finish what was started and
+ * save a step. When the time comes to its end, iOS calls the expiration
+ * handler — the runtime receives it through [expirations] and wraps the jobs
+ * up itself. Not wrapping them up in time is worse: then the system kills the
+ * whole app.
  */
 class IosProcessHold : ProcessHold {
 
@@ -29,7 +31,7 @@ class IosProcessHold : ProcessHold {
 
     private var taskId: UIBackgroundTaskIdentifier = UIBackgroundTaskInvalid
 
-    /** UIApplication отвечает только главному потоку — отсюда переключение. */
+    /** UIApplication answers the main thread only — hence the switch. */
     override suspend fun acquire() = withContext(Dispatchers.Main) {
         if (taskId != UIBackgroundTaskInvalid) return@withContext
 

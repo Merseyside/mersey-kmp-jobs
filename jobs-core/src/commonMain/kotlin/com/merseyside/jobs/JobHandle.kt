@@ -4,11 +4,11 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.first
 
 /**
- * Ручка запущенной задачи: следить за ходом и дождаться конца.
+ * Handle of a started job: watch its course and await its end.
  *
- * Экран берёт её у [JobRunner] по [JobId] — в том числе после того, как его
- * пересоздали. Задача от этого не прерывается: она живёт в рантайме, а не в
- * том, кто на неё смотрит.
+ * A screen takes it from [JobRunner] by [JobId] — including after the screen
+ * has been recreated. The job is not interrupted by that: it lives in the
+ * runtime, not in whoever is watching it.
  */
 interface JobHandle<out R : Any> {
 
@@ -18,11 +18,11 @@ interface JobHandle<out R : Any> {
 }
 
 /**
- * Ждёт конца работы. Возвращает результат, а падение задачи пробрасывает тому,
- * кто ждал.
+ * Awaits the end of the work. Returns the result, and rethrows the job's
+ * failure to whoever waited.
  *
- * Ожидание следующей попытки концом не считается: задача, которой не хватило
- * сети, ещё сделается, и ждущий дождётся её результата — пусть и позже.
+ * Waiting for the next attempt does not count as an end: a job that ran out of
+ * network will still be done, and the waiter will get its result — later.
  */
 suspend fun <R : Any> JobHandle<R>.await(): R =
     when (val finished = state.first { value -> value.isFinished }) {
@@ -30,7 +30,15 @@ suspend fun <R : Any> JobHandle<R>.await(): R =
         is JobState.Failed -> throw finished.error
         JobState.Cancelled -> throw JobCancelledException(id)
         is JobState.Running, is JobState.Waiting ->
-            error("Не может быть: состояние отфильтровано выше")
+            error("Cannot happen: the state is filtered out above")
     }
 
-class JobCancelledException(val jobId: JobId) : RuntimeException("Задача $jobId отменена")
+class JobCancelledException(val jobId: JobId) : RuntimeException("Job $jobId is cancelled")
+
+/**
+ * The undo is being finished after a restart. What put an end to the work is
+ * not stored — only the fact that the work will not happen — so this is what
+ * [JobSpec.compensate] is given the second time around.
+ */
+class JobUndoResumedException(val jobId: JobId) :
+    RuntimeException("Undo of job $jobId resumed after a restart")

@@ -5,11 +5,11 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 
 /**
- * Хранилище в памяти — заглушка по умолчанию.
+ * In-memory storage — the default stub.
  *
- * Годится там, где переживать перезапуск нечему: в тестах и в браузере, где
- * вкладку всё равно закрывают вместе со всем содержимым. На устройствах
- * приложение должно давать своё, иначе смысл сохранения шагов теряется.
+ * Good where there is nothing to survive a restart: in tests and in the
+ * browser, where the tab is closed with all its content anyway. On devices the
+ * app must provide its own, otherwise saving steps loses its point.
  */
 class InMemoryJobStorage : JobStorage {
 
@@ -29,8 +29,19 @@ class InMemoryJobStorage : JobStorage {
         jobs.values.filter { record -> record.isActive }
     }
 
+    override suspend fun compensatingJobs(): List<JobRecord> = mutex.withLock {
+        jobs.values.filter { record -> record.isCompensating }
+    }
+
     override suspend fun setActive(id: JobId, isActive: Boolean) = mutex.withLock {
         jobs[id]?.let { record -> jobs[id] = record.copy(isActive = isActive) }
+        Unit
+    }
+
+    override suspend fun setCompensating(id: JobId) = mutex.withLock {
+        jobs[id]?.let { record ->
+            jobs[id] = record.copy(isActive = false, isCompensating = true)
+        }
         Unit
     }
 

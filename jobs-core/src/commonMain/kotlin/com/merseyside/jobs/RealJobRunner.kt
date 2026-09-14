@@ -25,18 +25,18 @@ import kotlinx.coroutines.withTimeoutOrNull
 import kotlinx.serialization.json.Json
 
 /**
- * Рантайм долгих задач.
+ * The runtime of long-running jobs.
  *
- * Держит свою область корутин, не связанную ни с одним экраном, и одно
- * удержание процесса на все задачи разом: пока работает хоть одна, система
- * просят не убивать приложение.
+ * Keeps a coroutine scope of its own, tied to no screen, and one process hold
+ * for all jobs at once: while at least one of them is running, the system is
+ * asked not to kill the app.
  *
- * @param specs все виды работ, какие приложение умеет выполнять. Список нужен
- * целиком при создании: после перезапуска задача воссоздаётся по имени вида,
- * и незарегистрированную поднять будет некому.
- * @param storage куда ложится прогресс. По умолчанию — память, то есть до
- * первого закрытия приложения.
- * @param hold чем удерживается процесс. По умолчанию — ничем.
+ * @param specs every kind of work the app is able to perform. The list is
+ * needed in full at creation time: after a restart a job is recreated by the
+ * name of its kind, and an unregistered one would have nobody to revive it.
+ * @param storage where the progress goes. In memory by default, that is until
+ * the app is closed for the first time.
+ * @param hold what holds the process. Nothing by default.
  */
 class RealJobRunner(
     specs: List<JobSpec<*, *>>,
@@ -48,14 +48,14 @@ class RealJobRunner(
 
     private val specs: Map<String, JobSpec<*, *>> = specs.associateBy(JobSpec<*, *>::type)
 
-    /** Один замок на весь реестр: два одинаковых запуска не должны разойтись. */
+    /** One lock for the whole registry: two identical starts must not diverge. */
     private val mutex = Mutex()
 
     private val jobs = mutableMapOf<JobId, RunningJob<*>>()
 
     init {
-        // Система отбирает время у фонового процесса — сворачиваемся, не дожидаясь,
-        // пока приложение убьют вместе с несохранённым шагом
+        // The system is taking the time away from the background process — we wrap
+        // up without waiting for the app to be killed along with an unsaved step
         scope.launch {
             hold.expirations.collect { pauseAll() }
         }
@@ -75,29 +75,34 @@ class RealJobRunner(
                 val typed = running.cast<R>()
 
                 when {
-                    // Ждёт следующей попытки — просьба запустить её же означает
-                    // «попробуй сейчас»: человек нажал «повторить» и стоять до
-                    // конца паузы ему незачем
+                    // Waiting for the next attempt — a request to start the very
+                    // same work means "try now": the person pressed "retry" and has
+                    // no reason to stand until the pause is over
                     typed.isWaiting -> typed.wakeUp()
 
-                    // Незавершённая, но остановленная — это задача, у которой
-                    // система забрала время. Продолжаем ту же самую, а не
-                    // заводим вторую
+                    // Unfinished but stopped is a job whose time the system took
+                    // away. We continue the very same one instead of starting a
+                    // second
                     !typed.isAlive -> launchJob(spec, params, typed)
                 }
 
                 return@withLock typed
             }
 
-            // Отработавшая задача с теми же параметрами больше не нужна: её
-            // результат уже забрали, а держать её вечно — растить реестр
+            // A finished job with the same params is no longer needed: its result
+            // has already been taken, and keeping it forever grows the registry
             jobs.values
                 .filter { job -> job.type == spec.type && job.params == encodedParams }
                 .forEach { job -> jobs.remove(job.id) }
 
-            // Знакомая работа поднимает свои прошлые шаги: пройденное не повторяем
+            // Familiar work picks up its past steps: what is done is not redone
             val known = storage.findJob(spec.type, encodedParams)
-            val id = known?.id ?: JobId.random()
+
+            // Unless its undo never finished: those steps describe work that has
+            // been taken back, so the leftover record goes and we start clean
+            if (known?.isCompensating == true) storage.removeJob(known.id)
+
+            val id = known?.takeIf { record -> !record.isCompensating }?.id ?: JobId.random()
 
             storage.saveJob(
                 JobRecord(id = id, type = spec.type, params = encodedParams, isActive = true)
@@ -126,13 +131,31 @@ class RealJobRunner(
             )
         }
 
+    override suspend fun <P : Any, R : Any> ongoing(spec: JobSpec<P, R>): List<OngoingJob<P, R>> =
+        mutex.withLock {
+            jobs.values
+                .filter { job -> job.type == spec.type && !job.state.value.isFinished }
+                .map { job ->
+                    OngoingJob(
+                        params = json.decodeFromString(spec.paramsSerializer, job.params),
+                        handle = job.cast()
+                    )
+                }
+        }
+
     override suspend fun cancel(id: JobId) {
         val job = mutex.withLock { jobs[id] } ?: return
 
         job.coroutine?.cancelAndJoin()
 
+        // What the work has already written is undone here too: for the database
+        // there is no difference between a refusal and a change of mind — either
+        // way the work did not happen
+        withContext(NonCancellable) {
+            compensate(specs[job.type], job.params, id, JobCancelledException(id))
+        }
+
         mutex.withLock {
-            storage.removeJob(id)
             job.markCancelled()
             jobs.remove(id)
         }
@@ -141,19 +164,30 @@ class RealJobRunner(
     }
 
     override suspend fun restore() {
+        // The undos left halfway go first: until the database is back as it was,
+        // reviving anything on top of made-up rows only makes things worse
+        storage.compensatingJobs().forEach { record ->
+            compensate(
+                spec = specs[record.type],
+                encodedParams = record.params,
+                id = record.id,
+                error = JobUndoResumedException(record.id)
+            )
+        }
+
         val records = storage.activeJobs()
 
         mutex.withLock {
             records.forEach { record ->
-                // Вид работы не зарегистрирован — поднять её некому. Запись
-                // остаётся: спек может появиться в следующей версии приложения
+                // The kind of work is not registered — there is nobody to revive
+                // it. The record stays: the spec may appear in the next app version
                 val spec = specs[record.type] ?: return@forEach
 
                 val existing = jobs[record.id]
 
                 if (existing?.isAlive == true) {
-                    // Ожидающую торопим: приложение снова на экране, и сеть,
-                    // скорее всего, вернулась вместе с ним
+                    // A waiting one is hurried up: the app is on the screen again,
+                    // and the network has most likely returned with it
                     if (existing.isWaiting) existing.wakeUp()
 
                     return@forEach
@@ -165,9 +199,9 @@ class RealJobRunner(
     }
 
     /**
-     * Заводит прерванную задачу заново. Приведение типов здесь неизбежно:
-     * реестр хранит виды работ без своих параметров, а связь между видом и его
-     * параметрами задана самим [JobSpec] и нарушиться не может.
+     * Starts an interrupted job again. The casts here are unavoidable: the
+     * registry keeps kinds of work without their params, while the tie between
+     * a kind and its params is set by [JobSpec] itself and cannot be broken.
      */
     @Suppress("UNCHECKED_CAST")
     private suspend fun resume(spec: JobSpec<*, *>, record: JobRecord) {
@@ -181,30 +215,80 @@ class RealJobRunner(
         launchJob(typedSpec, params, job)
     }
 
-    private suspend fun <P : Any, R : Any> launchJob(
+    /**
+     * Undoes what the work has written and forgets the job.
+     *
+     * The mark goes into the storage first: from that moment the record is not
+     * revived but undone, and a process killed midway does not lose the undo —
+     * the next [restore] picks it up by that very mark. The record is forgotten
+     * only after the undo, along with its steps: there is nothing to continue
+     * from anymore, what they describe has just been taken back.
+     */
+    private suspend fun <P : Any, R : Any> compensate(
+        spec: JobSpec<P, R>,
+        params: P,
+        id: JobId,
+        error: Throwable
+    ) {
+        storage.setCompensating(id)
+        spec.compensate(params, error)
+        storage.removeJob(id)
+    }
+
+    /**
+     * The same, for a job whose params are only known as stored text. An
+     * unregistered kind of work has nobody to undo it — the record is forgotten
+     * as it is, there is no one to ask what it wrote.
+     */
+    @Suppress("UNCHECKED_CAST")
+    private suspend fun compensate(
+        spec: JobSpec<*, *>?,
+        encodedParams: String,
+        id: JobId,
+        error: Throwable
+    ) {
+        if (spec == null) {
+            storage.removeJob(id)
+            return
+        }
+
+        val typedSpec = spec as JobSpec<Any, Any>
+
+        compensate(
+            spec = typedSpec,
+            params = json.decodeFromString(typedSpec.paramsSerializer, encodedParams),
+            id = id,
+            error = error
+        )
+    }
+
+    private fun <P : Any, R : Any> launchJob(
         spec: JobSpec<P, R>,
         params: P,
         job: RunningJob<R>
     ) {
         job.coroutine = scope.launch {
             try {
-                // Попыток столько, сколько понадобится: временная ошибка на то и
-                // временная. От вечного тиканья спасает не счётчик, а растущая
-                // пауза — через несколько минут это одна попытка в две минуты
+                // As many attempts as it takes: a temporary error is temporary for
+                // a reason. How often to try — and whether to try on our own at all
+                // — is decided by the work itself through its RetryPolicy
                 while (true) {
                     job.markRunning()
 
-                    val outcome = runAttempt(spec, params, job)
+                    val outcome = runAttempt(spec, params, job) ?: return@launch
 
-                    if (outcome == null) return@launch
-
-                    // Пока ждём, удержание процесса отпускаем: держать сервис
-                    // переднего плана с уведомлением ради сна — обманывать и
-                    // систему, и человека
+                    // While waiting we release the process hold: keeping a
+                    // foreground service with a notification for the sake of sleep
+                    // deceives both the system and the person
                     withContext(NonCancellable) { releaseHoldIfIdle() }
 
-                    // Просьба запустить эту же работу будит нас раньше срока
-                    withTimeoutOrNull(retryDelay(outcome)) { job.awaitWake() }
+                    // A request to start this very work wakes us before the time
+                    when (val policy = spec.retryPolicy) {
+                        RetryPolicy.OnDemand -> job.awaitWake()
+
+                        is RetryPolicy.Backoff ->
+                            withTimeoutOrNull(policy.delayAfter(outcome).millis) { job.awaitWake() }
+                    }
                 }
             } finally {
                 withContext(NonCancellable) { releaseHoldIfIdle(finished = job) }
@@ -213,9 +297,9 @@ class RealJobRunner(
     }
 
     /**
-     * Одна попытка. Возвращает номер провалившейся попытки, если работу стоит
-     * повторить, и null — если всё кончилось: успехом или окончательной
-     * неудачей.
+     * A single attempt. Returns the number of the failed attempt if the work is
+     * worth repeating, and null if everything is over: with success or with a
+     * final failure.
      */
     private suspend fun <P : Any, R : Any> runAttempt(
         spec: JobSpec<P, R>,
@@ -238,8 +322,8 @@ class RealJobRunner(
 
             val result = with(spec) { jobScope.execute(params) }
 
-            // NonCancellable: задача уже сделала работу, и запись о ней
-            // нужно закрыть, даже если отмена пришла в этот самый момент
+            // NonCancellable: the job has already done the work, and its record
+            // has to be closed even if the cancellation came at this very moment
             withContext(NonCancellable) {
                 storage.removeJob(job.id)
                 job.markSuccess(result)
@@ -247,42 +331,37 @@ class RealJobRunner(
 
             return null
         } catch (cancellation: CancellationException) {
-            // Прогресс остаётся в хранилище, запись — активной: это пауза,
-            // а не конец. Отказ от задачи оформляет cancel()
+            // The progress stays in the storage and the record stays active: this
+            // is a pause, not an end. Giving the job up is what cancel() does
             throw cancellation
         } catch (error: Throwable) {
-            // Помочь нечем — говорим сразу: сколько ни повторяй, ответ будет
-            // тем же, а человек всё это время будет ждать впустую
+            // Nothing can help — we say so at once: repeat as long as you like,
+            // the answer stays the same, and the person waits in vain all that time
             if (!spec.isRetryable(error)) {
                 withContext(NonCancellable) {
-                    storage.setActive(job.id, isActive = false)
-                    job.markFailed(error)
+                    // markFailed even if the undo itself failed: the record keeps
+                    // its mark and the next restore() will finish the undo, but
+                    // whoever waits must not be left waiting forever
+                    try {
+                        compensate(spec, params, job.id, error)
+                    } finally {
+                        job.markFailed(error)
+                    }
                 }
 
                 return null
             }
 
-            // Запись остаётся активной: убьют процесс — задача поднимется
-            // следующим restore(), как поднимается прерванная
+            // The record stays active: if the process is killed, the job will be
+            // revived by the next restore(), the way an interrupted one is
             return withContext(NonCancellable) { job.markWaiting(error) }
         }
     }
 
     /**
-     * Через сколько пробовать снова. Пауза растёт вдвое с каждой неудачей и
-     * упирается в потолок: первые попытки идут часто — сеть чаще всего
-     * возвращается сразу, — а дальше работа тикает редко и почти ничего не
-     * стоит.
-     */
-    private fun retryDelay(attempt: Int): Long {
-        val grown = RETRY_BASE_MILLIS shl (attempt - 1).coerceAtMost(RETRY_MAX_SHIFT)
-
-        return grown.coerceAtMost(RETRY_MAX_MILLIS)
-    }
-
-    /**
-     * Останавливает всё, оставляя задачи незавершёнными: пройденные шаги уже в
-     * хранилище, и [restore] продолжит их с ближайшего непройденного.
+     * Stops everything, leaving the jobs unfinished: the passed steps are
+     * already in the storage, and [restore] will continue them from the nearest
+     * step not yet passed.
      */
     private suspend fun pauseAll() {
         val working = mutex.withLock { jobs.values.filter(RunningJob<*>::isWorking) }
@@ -291,12 +370,12 @@ class RealJobRunner(
     }
 
     /**
-     * Отпускает удержание, когда работать стало нечему.
+     * Releases the hold once there is nothing left to work on.
      *
-     * @param finished задача, которая прямо сейчас доигрывает свой последний шаг.
-     * Её приходится исключать: вызов приходит из её же корутины, а та до самого
-     * возврата остаётся активной — задача увидела бы работающей саму себя, и
-     * удержание не сняли бы никогда.
+     * @param finished the job that is playing out its very last step right now.
+     * It has to be excluded: the call comes from its own coroutine, and that one
+     * stays active until it returns — the job would see itself as running, and
+     * the hold would never be released.
      */
     private suspend fun releaseHoldIfIdle(finished: RunningJob<*>? = null) {
         val idle = mutex.withLock {
@@ -309,20 +388,8 @@ class RealJobRunner(
     @Suppress("UNCHECKED_CAST")
     private fun <R : Any> RunningJob<*>.cast(): RunningJob<R> = this as RunningJob<R>
 
-    private companion object {
-
-        /** Пауза после первой неудачи. Дальше удваивается. */
-        const val RETRY_BASE_MILLIS = 10_000L
-
-        /** Потолок паузы: реже раза в две минуты пробовать незачем. */
-        const val RETRY_MAX_MILLIS = 120_000L
-
-        /** Больше сдвигать бессмысленно — потолок и так ближе. */
-        const val RETRY_MAX_SHIFT = 8
-    }
-
     /**
-     * Задача в реестре: её состояние для наблюдателей и её корутина.
+     * A job in the registry: its state for the observers and its coroutine.
      */
     private class RunningJob<R : Any>(
         override val id: JobId,
@@ -334,30 +401,30 @@ class RealJobRunner(
 
         override val state: StateFlow<JobState<R>> = mutableState.asStateFlow()
 
-        /** Шаги без хранилища. Переживают перезапуск задачи, но не процесса. */
+        /** Steps without the storage. They survive a job restart, but not a process one. */
         val memory = mutableMapOf<String, Any?>()
 
         var coroutine: Job? = null
 
         /**
-         * Просьба попробовать прямо сейчас, не досыпая паузу. Буфер на одну
-         * заявку: пока задача спит, разбудить её дважды — то же самое, что
-         * разбудить один раз.
+         * A request to try right now instead of sleeping the pause out. A buffer
+         * for one request: while the job sleeps, waking it twice is the same as
+         * waking it once.
          */
         private val wake = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
 
-        /** Сколько попыток уже провалилось. По нему растёт пауза. */
+        /** How many attempts have already failed. The pause grows by it. */
         private var attempts = 0
 
-        /** Корутина жива: либо работает, либо спит до следующей попытки. */
+        /** The coroutine is alive: either running or sleeping until the next attempt. */
         val isAlive: Boolean
             get() = coroutine?.isActive == true
 
-        /** Ждёт следующей попытки. Процесс ради этого не удерживают. */
+        /** Waiting for the next attempt. The process is not held for that. */
         val isWaiting: Boolean
             get() = state.value is JobState.Waiting
 
-        /** Работает прямо сейчас — в отличие от спящей, которая ничего не делает. */
+        /** Running right now — unlike a sleeping one, which does nothing. */
         val isWorking: Boolean
             get() = isAlive && !isWaiting
 
@@ -369,7 +436,7 @@ class RealJobRunner(
             mutableState.value = JobState.Running(progress = null)
         }
 
-        /** Отмечает неудачную попытку и возвращает её номер. */
+        /** Marks a failed attempt and returns its number. */
         fun markWaiting(error: Throwable): Int {
             attempts++
             mutableState.value = JobState.Waiting(error = error, attempt = attempts)

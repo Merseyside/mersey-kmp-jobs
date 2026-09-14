@@ -5,13 +5,13 @@ import kotlinx.serialization.KSerializer
 import kotlinx.serialization.json.Json
 
 /**
- * Разметка работы на шаги. Создаётся заново на каждый проход задачи и получает
- * снимок того, что уже было пройдено раньше.
+ * Splitting the work into steps. Created anew for every pass of the job and
+ * given a snapshot of what has already been passed before.
  *
- * @param saved пройденные шаги из хранилища. Пополняется по ходу прохода,
- * чтобы шаг с одним именем не выполнился дважды.
- * @param memory пройденные шаги без хранилища. Общий на все проходы задачи в
- * пределах жизни процесса — в этом весь их смысл.
+ * @param saved passed steps from the storage. Filled in along the pass so that
+ * a step with the same name does not run twice.
+ * @param memory passed steps without the storage. Shared by every pass of the
+ * job within the life of the process — that is their whole point.
  */
 internal class RealJobScope(
     override val jobId: JobId,
@@ -40,8 +40,8 @@ internal class RealJobScope(
 
     @Suppress("UNCHECKED_CAST")
     override suspend fun <T> memoryStep(key: String, body: suspend () -> T): T {
-        // Именно containsKey, а не проверка на null: null — законный результат
-        // шага, и переспрашивать о нём не нужно
+        // containsKey exactly, not a null check: null is a legitimate result
+        // of a step, and there is no need to ask for it again
         if (memory.containsKey(key)) return memory[key] as T
 
         return body().also { value -> memory[key] = value }

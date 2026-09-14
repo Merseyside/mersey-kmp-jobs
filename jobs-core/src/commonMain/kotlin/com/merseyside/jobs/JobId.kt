@@ -4,8 +4,8 @@ import kotlin.jvm.JvmInline
 import kotlin.random.Random
 
 /**
- * Опознавательный знак запущенной задачи. Живёт дольше процесса: по нему
- * незавершённая работа находит свои сохранённые шаги после перезапуска.
+ * The mark identifying a started job. Outlives the process: by it unfinished
+ * work finds its saved steps after a restart.
  */
 @JvmInline
 value class JobId(val value: String) {
@@ -15,8 +15,8 @@ value class JobId(val value: String) {
     companion object {
 
         /**
-         * Случайный знак. Достаточно длинный, чтобы две задачи не столкнулись,
-         * и не претендующий на криптографическую стойкость: он никого не защищает.
+         * A random mark. Long enough for two jobs not to collide, and with no
+         * claim to cryptographic strength: it protects nobody.
          */
         fun random(): JobId {
             val value = (0 until LENGTH)
