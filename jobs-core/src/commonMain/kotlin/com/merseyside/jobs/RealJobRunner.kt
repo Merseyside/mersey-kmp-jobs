@@ -273,6 +273,18 @@ class RealJobRunner(
                 // a reason. How often to try — and whether to try on our own at all
                 // — is decided by the work itself through its RetryPolicy
                 while (true) {
+                    // The hold of the process is the condition for starting,
+                    // not a nicety on top of it: the system refuses it to an
+                    // app that is not on the screen, and an attempt begun
+                    // without it would be cut short mid-step — together with
+                    // the whole app. Refused means we sleep until woken, and
+                    // the waking comes from restore(), which the app calls
+                    // when it is back on the screen
+                    while (!hold.acquire()) {
+                        job.markHeldBack()
+                        job.awaitWake()
+                    }
+
                     job.markRunning()
 
                     val outcome = runAttempt(spec, params, job) ?: return@launch
@@ -297,17 +309,15 @@ class RealJobRunner(
     }
 
     /**
-     * A single attempt. Returns the number of the failed attempt if the work is
-     * worth repeating, and null if everything is over: with success or with a
-     * final failure.
+     * A single attempt, made with the hold of the process already taken.
+     * Returns the number of the failed attempt if the work is worth repeating,
+     * and null if everything is over: with success or with a final failure.
      */
     private suspend fun <P : Any, R : Any> runAttempt(
         spec: JobSpec<P, R>,
         params: P,
         job: RunningJob<R>
     ): Int? {
-        hold.acquire()
-
         try {
             val saved = storage.steps(job.id).toMutableMap()
 
@@ -434,6 +444,21 @@ class RealJobRunner(
 
         fun markRunning() {
             mutableState.value = JobState.Running(progress = null)
+        }
+
+        /**
+         * Marks a job parked until the app is back on the screen: the system
+         * refused the hold of the process, and starting without it is worse
+         * than waiting.
+         *
+         * The counter of attempts stays where it was — this attempt has not
+         * happened. The state is the very same waiting: for whoever watches
+         * the job there is no difference between an obstacle outside and one
+         * at home, the work is unfinished and will go on either way.
+         */
+        fun markHeldBack() {
+            mutableState.value =
+                JobState.Waiting(error = ProcessHoldRefusedException(id), attempt = attempts)
         }
 
         /** Marks a failed attempt and returns its number. */
