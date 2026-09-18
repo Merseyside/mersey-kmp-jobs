@@ -36,6 +36,25 @@ suspend fun <R : Any> JobHandle<R>.await(): R =
 class JobCancelledException(val jobId: JobId) : RuntimeException("Job $jobId is cancelled")
 
 /**
+ * The job was not even tried: the one in front of it in the queue failed for
+ * good, and its kind of work is [QueueFailure.FailRest].
+ *
+ * @param failedJobId the job whose failure brought this one down.
+ */
+class JobQueueFailedException(
+    val jobId: JobId,
+    val failedJobId: JobId,
+    cause: Throwable
+) : RuntimeException("Job $jobId is dropped: job $failedJobId in front of it failed", cause)
+
+/**
+ * A kept failed job brought back after a restart. The error itself does not
+ * survive the restart — only the fact that the work failed.
+ */
+class JobFailedBeforeRestartException(val jobId: JobId) :
+    RuntimeException("Job $jobId failed before a restart")
+
+/**
  * The undo is being finished after a restart. What put an end to the work is
  * not stored — only the fact that the work will not happen — so this is what
  * [JobSpec.compensate] is given the second time around.

@@ -19,7 +19,7 @@ interface JobStorage {
      */
     suspend fun findJob(type: String, params: String): JobRecord?
 
-    /** Jobs caught midway by a restart. */
+    /** Jobs caught midway by a restart, the oldest [JobRecord.createdAt] first. */
     suspend fun activeJobs(): List<JobRecord>
 
     /**
@@ -35,6 +35,16 @@ interface JobStorage {
      * is nothing to revive, only something to undo.
      */
     suspend fun setCompensating(id: JobId)
+
+    /**
+     * Marks the job as failed and kept: no longer active, no longer being
+     * undone. Its steps are forgotten — they describe work that has just been
+     * taken back.
+     */
+    suspend fun setFailed(id: JobId)
+
+    /** Failed jobs kept for a person to retry or delete. */
+    suspend fun failedJobs(): List<JobRecord>
 
     suspend fun removeJob(id: JobId)
 

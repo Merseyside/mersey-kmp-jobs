@@ -46,6 +46,26 @@ interface JobSpec<P : Any, R : Any> {
     val retryPolicy: RetryPolicy get() = RetryPolicy.Backoff()
 
     /**
+     * Whether jobs of this kind wait for each other. By default they do not:
+     * each one goes on its own.
+     */
+    val executionStrategy: ExecutionStrategy get() = ExecutionStrategy.Parallel
+
+    /**
+     * Whether a job that failed for good stays in the storage instead of being
+     * forgotten.
+     *
+     * For work a person sees and decides about: a comment the server refused is
+     * shown with a "retry" and a "delete". The undo still happens at the moment
+     * of the failure; the record stays failed until the work is started again
+     * with the same params or given up with [JobRunner.cancel].
+     *
+     * Off by default: a failed job nobody shows would lie in the storage forever,
+     * there is no one to delete it.
+     */
+    val keepsFailed: Boolean get() = false
+
+    /**
      * Undoes what the work has already written on its own, once it is clear
      * the work will not be finished: the server refused for good, or the job
      * was cancelled.

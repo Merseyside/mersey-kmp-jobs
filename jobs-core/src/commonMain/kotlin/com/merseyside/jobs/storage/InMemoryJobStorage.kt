@@ -26,7 +26,9 @@ class InMemoryJobStorage : JobStorage {
     }
 
     override suspend fun activeJobs(): List<JobRecord> = mutex.withLock {
-        jobs.values.filter { record -> record.isActive }
+        jobs.values
+            .filter { record -> record.isActive }
+            .sortedBy { record -> record.createdAt.millis }
     }
 
     override suspend fun compensatingJobs(): List<JobRecord> = mutex.withLock {
@@ -43,6 +45,18 @@ class InMemoryJobStorage : JobStorage {
             jobs[id] = record.copy(isActive = false, isCompensating = true)
         }
         Unit
+    }
+
+    override suspend fun setFailed(id: JobId) = mutex.withLock {
+        jobs[id]?.let { record ->
+            jobs[id] = record.copy(isActive = false, isCompensating = false, isFailed = true)
+        }
+        steps.remove(id)
+        Unit
+    }
+
+    override suspend fun failedJobs(): List<JobRecord> = mutex.withLock {
+        jobs.values.filter { record -> record.isFailed }
     }
 
     override suspend fun removeJob(id: JobId) = mutex.withLock {
