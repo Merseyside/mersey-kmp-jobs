@@ -14,7 +14,7 @@ dependencyResolutionManagement {
 
     versionCatalogs {
         create("catalogGradle") {
-            from("io.github.merseyside:catalog-version-gradle:1.8.6")
+            from("io.github.merseyside:catalog-version-gradle:1.8.8")
         }
     }
 }
