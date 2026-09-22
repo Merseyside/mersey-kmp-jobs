@@ -66,6 +66,17 @@ interface JobSpec<P : Any, R : Any> {
     val keepsFailed: Boolean get() = false
 
     /**
+     * The params of the work that replaces [previous] when started with
+     * `replacesPrevious`.
+     *
+     * By default only the last request matters and [next] is taken as it is. A
+     * kind whose params describe a change rather than a whole state merges them
+     * here, so that the replaced request is not lost: a task's priority changed
+     * and then its dates without the network must both reach the server.
+     */
+    fun mergeReplaced(previous: P, next: P): P = next
+
+    /**
      * Undoes what the work has already written on its own, once it is clear
      * the work will not be finished: the server refused for good, or the job
      * was cancelled.

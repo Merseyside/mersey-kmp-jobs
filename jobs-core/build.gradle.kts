@@ -13,6 +13,8 @@ kotlin {
         namespace = "com.merseyside.jobs"
         compileSdk = androidLibs.versions.compileSdk.get().toInt()
         minSdk = androidLibs.versions.compileMinSdk.get().toInt()
+
+        withHostTest {}
     }
 
     iosArm64()
@@ -41,6 +43,10 @@ kotlin {
         }
 
         commonTest.dependencies {
+            implementation(common.kotlin.test)
+        }
+
+        getByName("androidHostTest").dependencies {
             implementation(common.kotlin.test)
         }
     }

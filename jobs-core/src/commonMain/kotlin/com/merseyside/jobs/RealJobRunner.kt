@@ -107,9 +107,17 @@ class RealJobRunner(
                 }
             }
 
+            // Newest first, so every older request goes under the newer ones
+            val merged = replaced.sortedByDescending { job -> job.createdAt }
+                .fold(params) { next, job ->
+                    spec.mergeReplaced(json.decodeFromString(spec.paramsSerializer, job.params), next)
+                }
+
             replaced.forEach { job -> cancel(job.id) }
 
-            register(spec, params, encodedParams, ownerKey)
+            val encodedMerged = if (merged === params) encodedParams
+            else json.encodeToString(spec.paramsSerializer, merged)
+            register(spec, merged, encodedMerged, ownerKey)
         }
     }
 
