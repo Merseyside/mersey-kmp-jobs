@@ -4,6 +4,7 @@ plugins {
     alias(catalogPlugins.plugins.kotlin.multiplatform)
     alias(catalogPlugins.plugins.android.kotlin.multiplatform.library)
     alias(catalogPlugins.plugins.kotlin.serialization)
+    alias(catalogPlugins.plugins.mersey.kotlin.extension)
 
     `maven-publish-plugin`
 }
@@ -17,8 +18,10 @@ kotlin {
         withHostTest {}
     }
 
-    iosArm64()
-    iosSimulatorArm64()
+    ifBuildIos {
+        iosArm64()
+        iosSimulatorArm64()
+    }
 
     @OptIn(ExperimentalWasmDsl::class)
     wasmJs {
