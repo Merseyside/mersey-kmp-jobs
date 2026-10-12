@@ -1,0 +1,448 @@
+public abstract interface class com/merseyside/jobs/ExecutionStrategy {
+}
+
+public final class com/merseyside/jobs/ExecutionStrategy$Parallel : com/merseyside/jobs/ExecutionStrategy {
+	public static final field INSTANCE Lcom/merseyside/jobs/ExecutionStrategy$Parallel;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/merseyside/jobs/ExecutionStrategy$Sequential : com/merseyside/jobs/ExecutionStrategy {
+	public fun <init> ()V
+	public fun <init> (Lcom/merseyside/jobs/QueueFailure;)V
+	public synthetic fun <init> (Lcom/merseyside/jobs/QueueFailure;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Lcom/merseyside/jobs/QueueFailure;
+	public final fun copy (Lcom/merseyside/jobs/QueueFailure;)Lcom/merseyside/jobs/ExecutionStrategy$Sequential;
+	public static synthetic fun copy$default (Lcom/merseyside/jobs/ExecutionStrategy$Sequential;Lcom/merseyside/jobs/QueueFailure;ILjava/lang/Object;)Lcom/merseyside/jobs/ExecutionStrategy$Sequential;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getOnFailure ()Lcom/merseyside/jobs/QueueFailure;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/merseyside/jobs/JobCancelledException : java/lang/RuntimeException {
+	public synthetic fun <init> (Ljava/lang/String;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun getJobId-1rUkvKM ()Ljava/lang/String;
+}
+
+public abstract class com/merseyside/jobs/JobCrudUseCase {
+	public fun <init> (Lcom/merseyside/jobs/JobUseCase;Lcom/merseyside/jobs/JobUseCase;Lcom/merseyside/jobs/JobUseCase;)V
+	public final fun create (Lkotlinx/coroutines/CoroutineScope;Ljava/lang/Object;)Lkotlinx/coroutines/Job;
+	public final fun delete (Lkotlinx/coroutines/CoroutineScope;Ljava/lang/Object;Lkotlin/jvm/functions/Function0;)Lkotlinx/coroutines/Job;
+	public static synthetic fun delete$default (Lcom/merseyside/jobs/JobCrudUseCase;Lkotlinx/coroutines/CoroutineScope;Ljava/lang/Object;Lkotlin/jvm/functions/Function0;ILjava/lang/Object;)Lkotlinx/coroutines/Job;
+	public final fun deleteCreating (Lkotlinx/coroutines/CoroutineScope;Ljava/lang/Object;Lkotlin/jvm/functions/Function0;)Lkotlinx/coroutines/Job;
+	public static synthetic fun deleteCreating$default (Lcom/merseyside/jobs/JobCrudUseCase;Lkotlinx/coroutines/CoroutineScope;Ljava/lang/Object;Lkotlin/jvm/functions/Function0;ILjava/lang/Object;)Lkotlinx/coroutines/Job;
+	public final fun observeCreating (Lkotlinx/coroutines/CoroutineScope;Ljava/lang/String;Lkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function2;)Lkotlinx/coroutines/Job;
+	public static synthetic fun observeCreating$default (Lcom/merseyside/jobs/JobCrudUseCase;Lkotlinx/coroutines/CoroutineScope;Ljava/lang/String;Lkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function2;ILjava/lang/Object;)Lkotlinx/coroutines/Job;
+	public final fun retryCreating (Lkotlinx/coroutines/CoroutineScope;Ljava/lang/Object;)Lkotlinx/coroutines/Job;
+	public final fun update (Lkotlinx/coroutines/CoroutineScope;Ljava/lang/Object;Lkotlin/jvm/functions/Function1;)Lkotlinx/coroutines/Job;
+	public static synthetic fun update$default (Lcom/merseyside/jobs/JobCrudUseCase;Lkotlinx/coroutines/CoroutineScope;Ljava/lang/Object;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lkotlinx/coroutines/Job;
+	public final fun updateCreating (Lkotlinx/coroutines/CoroutineScope;Ljava/lang/Object;Ljava/lang/Object;)Lkotlinx/coroutines/Job;
+}
+
+public abstract interface class com/merseyside/jobs/JobEvent {
+}
+
+public final class com/merseyside/jobs/JobEvent$Done : com/merseyside/jobs/JobEvent {
+	public fun <init> (Ljava/lang/Object;)V
+	public final fun component1 ()Ljava/lang/Object;
+	public final fun copy (Ljava/lang/Object;)Lcom/merseyside/jobs/JobEvent$Done;
+	public static synthetic fun copy$default (Lcom/merseyside/jobs/JobEvent$Done;Ljava/lang/Object;ILjava/lang/Object;)Lcom/merseyside/jobs/JobEvent$Done;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getResult ()Ljava/lang/Object;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/merseyside/jobs/JobEvent$Scheduled : com/merseyside/jobs/JobEvent {
+	public fun <init> (Ljava/lang/Throwable;I)V
+	public final fun component1 ()Ljava/lang/Throwable;
+	public final fun component2 ()I
+	public final fun copy (Ljava/lang/Throwable;I)Lcom/merseyside/jobs/JobEvent$Scheduled;
+	public static synthetic fun copy$default (Lcom/merseyside/jobs/JobEvent$Scheduled;Ljava/lang/Throwable;IILjava/lang/Object;)Lcom/merseyside/jobs/JobEvent$Scheduled;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAttempt ()I
+	public final fun getError ()Ljava/lang/Throwable;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/merseyside/jobs/JobEvent$Stopped : com/merseyside/jobs/JobEvent {
+	public static final field INSTANCE Lcom/merseyside/jobs/JobEvent$Stopped;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/merseyside/jobs/JobEvent$Working : com/merseyside/jobs/JobEvent {
+	public fun <init> (Lcom/merseyside/jobs/JobProgress;)V
+	public final fun component1 ()Lcom/merseyside/jobs/JobProgress;
+	public final fun copy (Lcom/merseyside/jobs/JobProgress;)Lcom/merseyside/jobs/JobEvent$Working;
+	public static synthetic fun copy$default (Lcom/merseyside/jobs/JobEvent$Working;Lcom/merseyside/jobs/JobProgress;ILjava/lang/Object;)Lcom/merseyside/jobs/JobEvent$Working;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getProgress ()Lcom/merseyside/jobs/JobProgress;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/merseyside/jobs/JobFailedBeforeRestartException : java/lang/RuntimeException {
+	public synthetic fun <init> (Ljava/lang/String;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun getJobId-1rUkvKM ()Ljava/lang/String;
+}
+
+public abstract class com/merseyside/jobs/JobFlowUseCase {
+	public fun <init> (Lcom/merseyside/jobs/JobRunner;Lcom/merseyside/jobs/JobSpec;Lkotlin/jvm/functions/Function1;)V
+	public final fun execute (Ljava/lang/Object;)Lkotlinx/coroutines/flow/Flow;
+	public final fun ongoing ()Lkotlinx/coroutines/flow/Flow;
+}
+
+public abstract interface class com/merseyside/jobs/JobHandle {
+	public abstract fun getId-1rUkvKM ()Ljava/lang/String;
+	public abstract fun getState ()Lkotlinx/coroutines/flow/StateFlow;
+}
+
+public final class com/merseyside/jobs/JobHandleKt {
+	public static final fun await (Lcom/merseyside/jobs/JobHandle;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class com/merseyside/jobs/JobId {
+	public static final field Companion Lcom/merseyside/jobs/JobId$Companion;
+	public static final synthetic fun box-impl (Ljava/lang/String;)Lcom/merseyside/jobs/JobId;
+	public static fun constructor-impl (Ljava/lang/String;)Ljava/lang/String;
+	public fun equals (Ljava/lang/Object;)Z
+	public static fun equals-impl (Ljava/lang/String;Ljava/lang/Object;)Z
+	public static final fun equals-impl0 (Ljava/lang/String;Ljava/lang/String;)Z
+	public final fun getValue ()Ljava/lang/String;
+	public fun hashCode ()I
+	public static fun hashCode-impl (Ljava/lang/String;)I
+	public fun toString ()Ljava/lang/String;
+	public static fun toString-impl (Ljava/lang/String;)Ljava/lang/String;
+	public final synthetic fun unbox-impl ()Ljava/lang/String;
+}
+
+public final class com/merseyside/jobs/JobId$Companion {
+	public final fun random-1rUkvKM ()Ljava/lang/String;
+}
+
+public abstract interface class com/merseyside/jobs/JobProgress {
+}
+
+public final class com/merseyside/jobs/JobQueueFailedException : java/lang/RuntimeException {
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun getFailedJobId-1rUkvKM ()Ljava/lang/String;
+	public final fun getJobId-1rUkvKM ()Ljava/lang/String;
+}
+
+public abstract interface class com/merseyside/jobs/JobRunner {
+	public abstract fun cancel-uqsl7mQ (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun cancelIfIdle (Lcom/merseyside/jobs/JobSpec;Ljava/lang/Object;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun current (Lcom/merseyside/jobs/JobSpec;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun handle-uqsl7mQ (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun observe (Lcom/merseyside/jobs/JobSpec;Ljava/lang/String;)Lkotlinx/coroutines/flow/Flow;
+	public static synthetic fun observe$default (Lcom/merseyside/jobs/JobRunner;Lcom/merseyside/jobs/JobSpec;Ljava/lang/String;ILjava/lang/Object;)Lkotlinx/coroutines/flow/Flow;
+	public abstract fun ongoing (Lcom/merseyside/jobs/JobSpec;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun ongoing$default (Lcom/merseyside/jobs/JobRunner;Lcom/merseyside/jobs/JobSpec;Ljava/lang/String;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public abstract fun replace (Lcom/merseyside/jobs/JobSpec;Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun replace$default (Lcom/merseyside/jobs/JobRunner;Lcom/merseyside/jobs/JobSpec;Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/String;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public abstract fun restore (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun start (Lcom/merseyside/jobs/JobSpec;Ljava/lang/Object;Ljava/lang/String;ZLkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun start$default (Lcom/merseyside/jobs/JobRunner;Lcom/merseyside/jobs/JobSpec;Ljava/lang/Object;Ljava/lang/String;ZLkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+}
+
+public final class com/merseyside/jobs/JobRunner$DefaultImpls {
+	public static synthetic fun observe$default (Lcom/merseyside/jobs/JobRunner;Lcom/merseyside/jobs/JobSpec;Ljava/lang/String;ILjava/lang/Object;)Lkotlinx/coroutines/flow/Flow;
+	public static synthetic fun ongoing$default (Lcom/merseyside/jobs/JobRunner;Lcom/merseyside/jobs/JobSpec;Ljava/lang/String;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public static synthetic fun replace$default (Lcom/merseyside/jobs/JobRunner;Lcom/merseyside/jobs/JobSpec;Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/String;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public static synthetic fun start$default (Lcom/merseyside/jobs/JobRunner;Lcom/merseyside/jobs/JobSpec;Ljava/lang/Object;Ljava/lang/String;ZLkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+}
+
+public abstract interface class com/merseyside/jobs/JobScope {
+	public abstract fun getJobId-1rUkvKM ()Ljava/lang/String;
+	public abstract fun memoryStep (Ljava/lang/String;Lkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun report (Lcom/merseyside/jobs/JobProgress;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun step (Ljava/lang/String;Lkotlinx/serialization/KSerializer;Lkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public abstract interface class com/merseyside/jobs/JobSpec {
+	public fun compensate (Ljava/lang/Object;Ljava/lang/Throwable;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun execute (Lcom/merseyside/jobs/JobScope;Ljava/lang/Object;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun getExecutionStrategy ()Lcom/merseyside/jobs/ExecutionStrategy;
+	public fun getKeepsFailed ()Z
+	public abstract fun getParamsSerializer ()Lkotlinx/serialization/KSerializer;
+	public fun getRetryPolicy ()Lcom/merseyside/jobs/RetryPolicy;
+	public abstract fun getType ()Ljava/lang/String;
+	public fun isRetryable (Ljava/lang/Throwable;)Z
+	public fun mergeReplaced (Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;
+}
+
+public final class com/merseyside/jobs/JobSpec$DefaultImpls {
+	public static fun compensate (Lcom/merseyside/jobs/JobSpec;Ljava/lang/Object;Ljava/lang/Throwable;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static fun getExecutionStrategy (Lcom/merseyside/jobs/JobSpec;)Lcom/merseyside/jobs/ExecutionStrategy;
+	public static fun getKeepsFailed (Lcom/merseyside/jobs/JobSpec;)Z
+	public static fun getRetryPolicy (Lcom/merseyside/jobs/JobSpec;)Lcom/merseyside/jobs/RetryPolicy;
+	public static fun isRetryable (Lcom/merseyside/jobs/JobSpec;Ljava/lang/Throwable;)Z
+	public static fun mergeReplaced (Lcom/merseyside/jobs/JobSpec;Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;
+}
+
+public abstract interface class com/merseyside/jobs/JobState {
+	public fun isFinished ()Z
+}
+
+public final class com/merseyside/jobs/JobState$Cancelled : com/merseyside/jobs/JobState {
+	public static final field INSTANCE Lcom/merseyside/jobs/JobState$Cancelled;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public fun isFinished ()Z
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/merseyside/jobs/JobState$DefaultImpls {
+	public static fun isFinished (Lcom/merseyside/jobs/JobState;)Z
+}
+
+public final class com/merseyside/jobs/JobState$Failed : com/merseyside/jobs/JobState {
+	public fun <init> (Ljava/lang/Throwable;)V
+	public final fun component1 ()Ljava/lang/Throwable;
+	public final fun copy (Ljava/lang/Throwable;)Lcom/merseyside/jobs/JobState$Failed;
+	public static synthetic fun copy$default (Lcom/merseyside/jobs/JobState$Failed;Ljava/lang/Throwable;ILjava/lang/Object;)Lcom/merseyside/jobs/JobState$Failed;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getError ()Ljava/lang/Throwable;
+	public fun hashCode ()I
+	public fun isFinished ()Z
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/merseyside/jobs/JobState$Running : com/merseyside/jobs/JobState {
+	public fun <init> (Lcom/merseyside/jobs/JobProgress;)V
+	public final fun component1 ()Lcom/merseyside/jobs/JobProgress;
+	public final fun copy (Lcom/merseyside/jobs/JobProgress;)Lcom/merseyside/jobs/JobState$Running;
+	public static synthetic fun copy$default (Lcom/merseyside/jobs/JobState$Running;Lcom/merseyside/jobs/JobProgress;ILjava/lang/Object;)Lcom/merseyside/jobs/JobState$Running;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getProgress ()Lcom/merseyside/jobs/JobProgress;
+	public fun hashCode ()I
+	public fun isFinished ()Z
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/merseyside/jobs/JobState$Success : com/merseyside/jobs/JobState {
+	public fun <init> (Ljava/lang/Object;)V
+	public final fun component1 ()Ljava/lang/Object;
+	public final fun copy (Ljava/lang/Object;)Lcom/merseyside/jobs/JobState$Success;
+	public static synthetic fun copy$default (Lcom/merseyside/jobs/JobState$Success;Ljava/lang/Object;ILjava/lang/Object;)Lcom/merseyside/jobs/JobState$Success;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getResult ()Ljava/lang/Object;
+	public fun hashCode ()I
+	public fun isFinished ()Z
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/merseyside/jobs/JobState$Waiting : com/merseyside/jobs/JobState {
+	public fun <init> (Ljava/lang/Throwable;I)V
+	public final fun component1 ()Ljava/lang/Throwable;
+	public final fun component2 ()I
+	public final fun copy (Ljava/lang/Throwable;I)Lcom/merseyside/jobs/JobState$Waiting;
+	public static synthetic fun copy$default (Lcom/merseyside/jobs/JobState$Waiting;Ljava/lang/Throwable;IILjava/lang/Object;)Lcom/merseyside/jobs/JobState$Waiting;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAttempt ()I
+	public final fun getError ()Ljava/lang/Throwable;
+	public fun hashCode ()I
+	public fun isFinished ()Z
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/merseyside/jobs/JobUndoResumedException : java/lang/RuntimeException {
+	public synthetic fun <init> (Ljava/lang/String;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun getJobId-1rUkvKM ()Ljava/lang/String;
+}
+
+public abstract class com/merseyside/jobs/JobUseCase {
+	public fun <init> (Lcom/merseyside/jobs/JobRunner;Lcom/merseyside/jobs/JobSpec;Z)V
+	public synthetic fun <init> (Lcom/merseyside/jobs/JobRunner;Lcom/merseyside/jobs/JobSpec;ZILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun cancel (Ljava/lang/Object;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun execute (Lkotlinx/coroutines/CoroutineScope;Ljava/lang/Object;Lkotlin/jvm/functions/Function0;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function1;)Lkotlinx/coroutines/Job;
+	public static synthetic fun execute$default (Lcom/merseyside/jobs/JobUseCase;Lkotlinx/coroutines/CoroutineScope;Ljava/lang/Object;Lkotlin/jvm/functions/Function0;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lkotlinx/coroutines/Job;
+	public final fun invoke (Ljava/lang/Object;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun observeOngoing (Lkotlinx/coroutines/CoroutineScope;Ljava/lang/String;Lkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function2;)Lkotlinx/coroutines/Job;
+	public static synthetic fun observeOngoing$default (Lcom/merseyside/jobs/JobUseCase;Lkotlinx/coroutines/CoroutineScope;Ljava/lang/String;Lkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function2;ILjava/lang/Object;)Lkotlinx/coroutines/Job;
+	protected fun ownerKeyOf (Ljava/lang/Object;)Ljava/lang/String;
+	public final fun replace (Ljava/lang/Object;Ljava/lang/Object;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class com/merseyside/jobs/OngoingJob {
+	public fun <init> (Ljava/lang/Object;Lcom/merseyside/jobs/JobHandle;)V
+	public final fun component1 ()Ljava/lang/Object;
+	public final fun component2 ()Lcom/merseyside/jobs/JobHandle;
+	public final fun copy (Ljava/lang/Object;Lcom/merseyside/jobs/JobHandle;)Lcom/merseyside/jobs/OngoingJob;
+	public static synthetic fun copy$default (Lcom/merseyside/jobs/OngoingJob;Ljava/lang/Object;Lcom/merseyside/jobs/JobHandle;ILjava/lang/Object;)Lcom/merseyside/jobs/OngoingJob;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getHandle ()Lcom/merseyside/jobs/JobHandle;
+	public final fun getParams ()Ljava/lang/Object;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/merseyside/jobs/ProcessHoldRefusedException : java/lang/RuntimeException {
+	public synthetic fun <init> (Ljava/lang/String;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun getJobId-1rUkvKM ()Ljava/lang/String;
+}
+
+public final class com/merseyside/jobs/QueueFailure : java/lang/Enum {
+	public static final field Continue Lcom/merseyside/jobs/QueueFailure;
+	public static final field FailRest Lcom/merseyside/jobs/QueueFailure;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lcom/merseyside/jobs/QueueFailure;
+	public static fun values ()[Lcom/merseyside/jobs/QueueFailure;
+}
+
+public final class com/merseyside/jobs/RealJobRunner : com/merseyside/jobs/JobRunner {
+	public fun <init> (Ljava/util/List;Lcom/merseyside/jobs/storage/JobStorage;Lcom/merseyside/jobs/hold/ProcessHold;Lkotlinx/serialization/json/Json;Lkotlinx/coroutines/CoroutineScope;)V
+	public synthetic fun <init> (Ljava/util/List;Lcom/merseyside/jobs/storage/JobStorage;Lcom/merseyside/jobs/hold/ProcessHold;Lkotlinx/serialization/json/Json;Lkotlinx/coroutines/CoroutineScope;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun cancel-uqsl7mQ (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun cancelIfIdle (Lcom/merseyside/jobs/JobSpec;Ljava/lang/Object;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun current (Lcom/merseyside/jobs/JobSpec;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun handle-uqsl7mQ (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun observe (Lcom/merseyside/jobs/JobSpec;Ljava/lang/String;)Lkotlinx/coroutines/flow/Flow;
+	public fun ongoing (Lcom/merseyside/jobs/JobSpec;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun replace (Lcom/merseyside/jobs/JobSpec;Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun restore (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun start (Lcom/merseyside/jobs/JobSpec;Ljava/lang/Object;Ljava/lang/String;ZLkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public abstract interface class com/merseyside/jobs/RetryPolicy {
+}
+
+public final class com/merseyside/jobs/RetryPolicy$Backoff : com/merseyside/jobs/RetryPolicy {
+	public static final field Companion Lcom/merseyside/jobs/RetryPolicy$Backoff$Companion;
+	public fun <init> ()V
+	public fun <init> (Lcom/merseyside/merseyLib/time/units/TimeUnit;Lcom/merseyside/merseyLib/time/units/TimeUnit;)V
+	public synthetic fun <init> (Lcom/merseyside/merseyLib/time/units/TimeUnit;Lcom/merseyside/merseyLib/time/units/TimeUnit;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Lcom/merseyside/merseyLib/time/units/TimeUnit;
+	public final fun component2 ()Lcom/merseyside/merseyLib/time/units/TimeUnit;
+	public final fun copy (Lcom/merseyside/merseyLib/time/units/TimeUnit;Lcom/merseyside/merseyLib/time/units/TimeUnit;)Lcom/merseyside/jobs/RetryPolicy$Backoff;
+	public static synthetic fun copy$default (Lcom/merseyside/jobs/RetryPolicy$Backoff;Lcom/merseyside/merseyLib/time/units/TimeUnit;Lcom/merseyside/merseyLib/time/units/TimeUnit;ILjava/lang/Object;)Lcom/merseyside/jobs/RetryPolicy$Backoff;
+	public final fun delayAfter (I)Lcom/merseyside/merseyLib/time/units/TimeUnit;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getBase ()Lcom/merseyside/merseyLib/time/units/TimeUnit;
+	public final fun getMax ()Lcom/merseyside/merseyLib/time/units/TimeUnit;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/merseyside/jobs/RetryPolicy$Backoff$Companion {
+	public final fun getDEFAULT_BASE ()Lcom/merseyside/merseyLib/time/units/TimeUnit;
+	public final fun getDEFAULT_MAX ()Lcom/merseyside/merseyLib/time/units/TimeUnit;
+}
+
+public final class com/merseyside/jobs/RetryPolicy$OnDemand : com/merseyside/jobs/RetryPolicy {
+	public static final field INSTANCE Lcom/merseyside/jobs/RetryPolicy$OnDemand;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/merseyside/jobs/hold/AndroidProcessHold : com/merseyside/jobs/hold/ProcessHold {
+	public fun <init> (Landroid/content/Context;Lkotlin/jvm/functions/Function1;)V
+	public fun acquire (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun getExpirations ()Lkotlinx/coroutines/flow/Flow;
+	public fun release (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class com/merseyside/jobs/hold/JobForegroundService : android/app/Service {
+	public fun <init> ()V
+	public fun onBind (Landroid/content/Intent;)Landroid/os/IBinder;
+	public fun onDestroy ()V
+	public fun onStartCommand (Landroid/content/Intent;II)I
+}
+
+public final class com/merseyside/jobs/hold/JobNotification {
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;I)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/lang/String;
+	public final fun component4 ()Ljava/lang/String;
+	public final fun component5 ()I
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;I)Lcom/merseyside/jobs/hold/JobNotification;
+	public static synthetic fun copy$default (Lcom/merseyside/jobs/hold/JobNotification;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;IILjava/lang/Object;)Lcom/merseyside/jobs/hold/JobNotification;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getChannelId ()Ljava/lang/String;
+	public final fun getChannelName ()Ljava/lang/String;
+	public final fun getIcon ()I
+	public final fun getText ()Ljava/lang/String;
+	public final fun getTitle ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/merseyside/jobs/hold/NoProcessHold : com/merseyside/jobs/hold/ProcessHold {
+	public static final field INSTANCE Lcom/merseyside/jobs/hold/NoProcessHold;
+	public fun acquire (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun getExpirations ()Lkotlinx/coroutines/flow/Flow;
+	public fun release (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public abstract interface class com/merseyside/jobs/hold/ProcessHold {
+	public abstract fun acquire (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun getExpirations ()Lkotlinx/coroutines/flow/Flow;
+	public abstract fun release (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class com/merseyside/jobs/hold/ProcessHold$DefaultImpls {
+	public static fun getExpirations (Lcom/merseyside/jobs/hold/ProcessHold;)Lkotlinx/coroutines/flow/Flow;
+}
+
+public final class com/merseyside/jobs/storage/InMemoryJobStorage : com/merseyside/jobs/storage/JobStorage {
+	public fun <init> ()V
+	public fun activeJobs (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun compensatingJobs (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun failedJobs (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun findJob (Ljava/lang/String;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun removeJob-uqsl7mQ (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun saveJob (Lcom/merseyside/jobs/storage/JobRecord;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun saveStep-bwSxURM (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun setActive-4D5oYH0 (Ljava/lang/String;ZLkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun setCompensating-uqsl7mQ (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun setFailed-uqsl7mQ (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun steps-uqsl7mQ (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class com/merseyside/jobs/storage/JobRecord {
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lcom/merseyside/merseyLib/time/units/TimeUnit;Ljava/lang/String;ZZZILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lcom/merseyside/merseyLib/time/units/TimeUnit;Ljava/lang/String;ZZZLkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1-1rUkvKM ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/lang/String;
+	public final fun component4 ()Lcom/merseyside/merseyLib/time/units/TimeUnit;
+	public final fun component5 ()Ljava/lang/String;
+	public final fun component6 ()Z
+	public final fun component7 ()Z
+	public final fun component8 ()Z
+	public final fun copy-uyhcBds (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lcom/merseyside/merseyLib/time/units/TimeUnit;Ljava/lang/String;ZZZ)Lcom/merseyside/jobs/storage/JobRecord;
+	public static synthetic fun copy-uyhcBds$default (Lcom/merseyside/jobs/storage/JobRecord;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lcom/merseyside/merseyLib/time/units/TimeUnit;Ljava/lang/String;ZZZILjava/lang/Object;)Lcom/merseyside/jobs/storage/JobRecord;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getCreatedAt ()Lcom/merseyside/merseyLib/time/units/TimeUnit;
+	public final fun getId-1rUkvKM ()Ljava/lang/String;
+	public final fun getOwnerKey ()Ljava/lang/String;
+	public final fun getParams ()Ljava/lang/String;
+	public final fun getType ()Ljava/lang/String;
+	public fun hashCode ()I
+	public final fun isActive ()Z
+	public final fun isCompensating ()Z
+	public final fun isFailed ()Z
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract interface class com/merseyside/jobs/storage/JobStorage {
+	public abstract fun activeJobs (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun compensatingJobs (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun failedJobs (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun findJob (Ljava/lang/String;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun removeJob-uqsl7mQ (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun saveJob (Lcom/merseyside/jobs/storage/JobRecord;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun saveStep-bwSxURM (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun setActive-4D5oYH0 (Ljava/lang/String;ZLkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun setCompensating-uqsl7mQ (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun setFailed-uqsl7mQ (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun steps-uqsl7mQ (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+

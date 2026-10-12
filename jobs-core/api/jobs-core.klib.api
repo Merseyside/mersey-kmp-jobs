@@ -1,0 +1,427 @@
+// Klib ABI Dump
+// Targets: [wasmJs]
+// Rendering settings:
+// - Signature version: 2
+// - Show manifest properties: true
+// - Show declarations: true
+
+// Library unique name: <io.github.merseyside:jobs-core>
+final enum class com.merseyside.jobs/QueueFailure : kotlin/Enum<com.merseyside.jobs/QueueFailure> { // com.merseyside.jobs/QueueFailure|null[0]
+    enum entry Continue // com.merseyside.jobs/QueueFailure.Continue|null[0]
+    enum entry FailRest // com.merseyside.jobs/QueueFailure.FailRest|null[0]
+
+    final val entries // com.merseyside.jobs/QueueFailure.entries|#static{}entries[0]
+        final fun <get-entries>(): kotlin.enums/EnumEntries<com.merseyside.jobs/QueueFailure> // com.merseyside.jobs/QueueFailure.entries.<get-entries>|<get-entries>#static(){}[0]
+
+    final fun valueOf(kotlin/String): com.merseyside.jobs/QueueFailure // com.merseyside.jobs/QueueFailure.valueOf|valueOf#static(kotlin.String){}[0]
+    final fun values(): kotlin/Array<com.merseyside.jobs/QueueFailure> // com.merseyside.jobs/QueueFailure.values|values#static(){}[0]
+}
+
+abstract interface <#A: kotlin/Any, #B: kotlin/Any> com.merseyside.jobs/JobSpec { // com.merseyside.jobs/JobSpec|null[0]
+    abstract val paramsSerializer // com.merseyside.jobs/JobSpec.paramsSerializer|{}paramsSerializer[0]
+        abstract fun <get-paramsSerializer>(): kotlinx.serialization/KSerializer<#A> // com.merseyside.jobs/JobSpec.paramsSerializer.<get-paramsSerializer>|<get-paramsSerializer>(){}[0]
+    abstract val type // com.merseyside.jobs/JobSpec.type|{}type[0]
+        abstract fun <get-type>(): kotlin/String // com.merseyside.jobs/JobSpec.type.<get-type>|<get-type>(){}[0]
+    open val executionStrategy // com.merseyside.jobs/JobSpec.executionStrategy|{}executionStrategy[0]
+        open fun <get-executionStrategy>(): com.merseyside.jobs/ExecutionStrategy // com.merseyside.jobs/JobSpec.executionStrategy.<get-executionStrategy>|<get-executionStrategy>(){}[0]
+    open val keepsFailed // com.merseyside.jobs/JobSpec.keepsFailed|{}keepsFailed[0]
+        open fun <get-keepsFailed>(): kotlin/Boolean // com.merseyside.jobs/JobSpec.keepsFailed.<get-keepsFailed>|<get-keepsFailed>(){}[0]
+    open val retryPolicy // com.merseyside.jobs/JobSpec.retryPolicy|{}retryPolicy[0]
+        open fun <get-retryPolicy>(): com.merseyside.jobs/RetryPolicy // com.merseyside.jobs/JobSpec.retryPolicy.<get-retryPolicy>|<get-retryPolicy>(){}[0]
+
+    abstract suspend fun (com.merseyside.jobs/JobScope).execute(#A): #B // com.merseyside.jobs/JobSpec.execute|execute@com.merseyside.jobs.JobScope(1:0){}[0]
+    open fun isRetryable(kotlin/Throwable): kotlin/Boolean // com.merseyside.jobs/JobSpec.isRetryable|isRetryable(kotlin.Throwable){}[0]
+    open fun mergeReplaced(#A, #A): #A // com.merseyside.jobs/JobSpec.mergeReplaced|mergeReplaced(1:0;1:0){}[0]
+    open suspend fun compensate(#A, kotlin/Throwable) // com.merseyside.jobs/JobSpec.compensate|compensate(1:0;kotlin.Throwable){}[0]
+}
+
+abstract interface <#A: out kotlin/Any> com.merseyside.jobs/JobHandle { // com.merseyside.jobs/JobHandle|null[0]
+    abstract val id // com.merseyside.jobs/JobHandle.id|{}id[0]
+        abstract fun <get-id>(): com.merseyside.jobs/JobId // com.merseyside.jobs/JobHandle.id.<get-id>|<get-id>(){}[0]
+    abstract val state // com.merseyside.jobs/JobHandle.state|{}state[0]
+        abstract fun <get-state>(): kotlinx.coroutines.flow/StateFlow<com.merseyside.jobs/JobState<#A>> // com.merseyside.jobs/JobHandle.state.<get-state>|<get-state>(){}[0]
+}
+
+abstract interface com.merseyside.jobs.hold/ProcessHold { // com.merseyside.jobs.hold/ProcessHold|null[0]
+    open val expirations // com.merseyside.jobs.hold/ProcessHold.expirations|{}expirations[0]
+        open fun <get-expirations>(): kotlinx.coroutines.flow/Flow<kotlin/Unit> // com.merseyside.jobs.hold/ProcessHold.expirations.<get-expirations>|<get-expirations>(){}[0]
+
+    abstract suspend fun acquire(): kotlin/Boolean // com.merseyside.jobs.hold/ProcessHold.acquire|acquire(){}[0]
+    abstract suspend fun release() // com.merseyside.jobs.hold/ProcessHold.release|release(){}[0]
+}
+
+abstract interface com.merseyside.jobs.storage/JobStorage { // com.merseyside.jobs.storage/JobStorage|null[0]
+    abstract suspend fun activeJobs(): kotlin.collections/List<com.merseyside.jobs.storage/JobRecord> // com.merseyside.jobs.storage/JobStorage.activeJobs|activeJobs(){}[0]
+    abstract suspend fun compensatingJobs(): kotlin.collections/List<com.merseyside.jobs.storage/JobRecord> // com.merseyside.jobs.storage/JobStorage.compensatingJobs|compensatingJobs(){}[0]
+    abstract suspend fun failedJobs(): kotlin.collections/List<com.merseyside.jobs.storage/JobRecord> // com.merseyside.jobs.storage/JobStorage.failedJobs|failedJobs(){}[0]
+    abstract suspend fun findJob(kotlin/String, kotlin/String): com.merseyside.jobs.storage/JobRecord? // com.merseyside.jobs.storage/JobStorage.findJob|findJob(kotlin.String;kotlin.String){}[0]
+    abstract suspend fun removeJob(com.merseyside.jobs/JobId) // com.merseyside.jobs.storage/JobStorage.removeJob|removeJob(com.merseyside.jobs.JobId){}[0]
+    abstract suspend fun saveJob(com.merseyside.jobs.storage/JobRecord) // com.merseyside.jobs.storage/JobStorage.saveJob|saveJob(com.merseyside.jobs.storage.JobRecord){}[0]
+    abstract suspend fun saveStep(com.merseyside.jobs/JobId, kotlin/String, kotlin/String) // com.merseyside.jobs.storage/JobStorage.saveStep|saveStep(com.merseyside.jobs.JobId;kotlin.String;kotlin.String){}[0]
+    abstract suspend fun setActive(com.merseyside.jobs/JobId, kotlin/Boolean) // com.merseyside.jobs.storage/JobStorage.setActive|setActive(com.merseyside.jobs.JobId;kotlin.Boolean){}[0]
+    abstract suspend fun setCompensating(com.merseyside.jobs/JobId) // com.merseyside.jobs.storage/JobStorage.setCompensating|setCompensating(com.merseyside.jobs.JobId){}[0]
+    abstract suspend fun setFailed(com.merseyside.jobs/JobId) // com.merseyside.jobs.storage/JobStorage.setFailed|setFailed(com.merseyside.jobs.JobId){}[0]
+    abstract suspend fun steps(com.merseyside.jobs/JobId): kotlin.collections/Map<kotlin/String, kotlin/String> // com.merseyside.jobs.storage/JobStorage.steps|steps(com.merseyside.jobs.JobId){}[0]
+}
+
+abstract interface com.merseyside.jobs/JobProgress // com.merseyside.jobs/JobProgress|null[0]
+
+abstract interface com.merseyside.jobs/JobRunner { // com.merseyside.jobs/JobRunner|null[0]
+    abstract fun <#A1: kotlin/Any, #B1: kotlin/Any> observe(com.merseyside.jobs/JobSpec<#A1, #B1>, kotlin/String? = ...): kotlinx.coroutines.flow/Flow<com.merseyside.jobs/OngoingJob<#A1, #B1>> // com.merseyside.jobs/JobRunner.observe|observe(com.merseyside.jobs.JobSpec<0:0,0:1>;kotlin.String?){0§<kotlin.Any>;1§<kotlin.Any>}[0]
+    abstract suspend fun <#A1: kotlin/Any, #B1: kotlin/Any> cancelIfIdle(com.merseyside.jobs/JobSpec<#A1, #B1>, #A1): kotlin/Boolean // com.merseyside.jobs/JobRunner.cancelIfIdle|cancelIfIdle(com.merseyside.jobs.JobSpec<0:0,0:1>;0:0){0§<kotlin.Any>;1§<kotlin.Any>}[0]
+    abstract suspend fun <#A1: kotlin/Any, #B1: kotlin/Any> current(com.merseyside.jobs/JobSpec<#A1, #B1>): com.merseyside.jobs/OngoingJob<#A1, #B1>? // com.merseyside.jobs/JobRunner.current|current(com.merseyside.jobs.JobSpec<0:0,0:1>){0§<kotlin.Any>;1§<kotlin.Any>}[0]
+    abstract suspend fun <#A1: kotlin/Any, #B1: kotlin/Any> ongoing(com.merseyside.jobs/JobSpec<#A1, #B1>, kotlin/String? = ...): kotlin.collections/List<com.merseyside.jobs/OngoingJob<#A1, #B1>> // com.merseyside.jobs/JobRunner.ongoing|ongoing(com.merseyside.jobs.JobSpec<0:0,0:1>;kotlin.String?){0§<kotlin.Any>;1§<kotlin.Any>}[0]
+    abstract suspend fun <#A1: kotlin/Any, #B1: kotlin/Any> replace(com.merseyside.jobs/JobSpec<#A1, #B1>, #A1, #A1, kotlin/String? = ...): com.merseyside.jobs/JobHandle<#B1>? // com.merseyside.jobs/JobRunner.replace|replace(com.merseyside.jobs.JobSpec<0:0,0:1>;0:0;0:0;kotlin.String?){0§<kotlin.Any>;1§<kotlin.Any>}[0]
+    abstract suspend fun <#A1: kotlin/Any, #B1: kotlin/Any> start(com.merseyside.jobs/JobSpec<#A1, #B1>, #A1, kotlin/String? = ..., kotlin/Boolean = ...): com.merseyside.jobs/JobHandle<#B1> // com.merseyside.jobs/JobRunner.start|start(com.merseyside.jobs.JobSpec<0:0,0:1>;0:0;kotlin.String?;kotlin.Boolean){0§<kotlin.Any>;1§<kotlin.Any>}[0]
+    abstract suspend fun <#A1: kotlin/Any> handle(com.merseyside.jobs/JobId): com.merseyside.jobs/JobHandle<#A1>? // com.merseyside.jobs/JobRunner.handle|handle(com.merseyside.jobs.JobId){0§<kotlin.Any>}[0]
+    abstract suspend fun cancel(com.merseyside.jobs/JobId) // com.merseyside.jobs/JobRunner.cancel|cancel(com.merseyside.jobs.JobId){}[0]
+    abstract suspend fun restore() // com.merseyside.jobs/JobRunner.restore|restore(){}[0]
+}
+
+abstract interface com.merseyside.jobs/JobScope { // com.merseyside.jobs/JobScope|null[0]
+    abstract val jobId // com.merseyside.jobs/JobScope.jobId|{}jobId[0]
+        abstract fun <get-jobId>(): com.merseyside.jobs/JobId // com.merseyside.jobs/JobScope.jobId.<get-jobId>|<get-jobId>(){}[0]
+
+    abstract suspend fun <#A1: kotlin/Any?> memoryStep(kotlin/String, kotlin.coroutines/SuspendFunction0<#A1>): #A1 // com.merseyside.jobs/JobScope.memoryStep|memoryStep(kotlin.String;kotlin.coroutines.SuspendFunction0<0:0>){0§<kotlin.Any?>}[0]
+    abstract suspend fun <#A1: kotlin/Any?> step(kotlin/String, kotlinx.serialization/KSerializer<#A1>, kotlin.coroutines/SuspendFunction0<#A1>): #A1 // com.merseyside.jobs/JobScope.step|step(kotlin.String;kotlinx.serialization.KSerializer<0:0>;kotlin.coroutines.SuspendFunction0<0:0>){0§<kotlin.Any?>}[0]
+    abstract suspend fun report(com.merseyside.jobs/JobProgress) // com.merseyside.jobs/JobScope.report|report(com.merseyside.jobs.JobProgress){}[0]
+}
+
+sealed interface <#A: out kotlin/Any, #B: out com.merseyside.jobs/JobProgress> com.merseyside.jobs/JobEvent { // com.merseyside.jobs/JobEvent|null[0]
+    final class <#A1: out com.merseyside.jobs/JobProgress> Working : com.merseyside.jobs/JobEvent<kotlin/Nothing, #A1> { // com.merseyside.jobs/JobEvent.Working|null[0]
+        constructor <init>(#A1?) // com.merseyside.jobs/JobEvent.Working.<init>|<init>(1:0?){}[0]
+
+        final val progress // com.merseyside.jobs/JobEvent.Working.progress|{}progress[0]
+            final fun <get-progress>(): #A1? // com.merseyside.jobs/JobEvent.Working.progress.<get-progress>|<get-progress>(){}[0]
+
+        final fun component1(): #A1? // com.merseyside.jobs/JobEvent.Working.component1|component1(){}[0]
+        final fun copy(#A1? = ...): com.merseyside.jobs/JobEvent.Working<#A1> // com.merseyside.jobs/JobEvent.Working.copy|copy(1:0?){}[0]
+        final fun equals(kotlin/Any?): kotlin/Boolean // com.merseyside.jobs/JobEvent.Working.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // com.merseyside.jobs/JobEvent.Working.hashCode|hashCode(){}[0]
+        final fun toString(): kotlin/String // com.merseyside.jobs/JobEvent.Working.toString|toString(){}[0]
+    }
+
+    final class <#A1: out kotlin/Any> Done : com.merseyside.jobs/JobEvent<#A1, kotlin/Nothing> { // com.merseyside.jobs/JobEvent.Done|null[0]
+        constructor <init>(#A1) // com.merseyside.jobs/JobEvent.Done.<init>|<init>(1:0){}[0]
+
+        final val result // com.merseyside.jobs/JobEvent.Done.result|{}result[0]
+            final fun <get-result>(): #A1 // com.merseyside.jobs/JobEvent.Done.result.<get-result>|<get-result>(){}[0]
+
+        final fun component1(): #A1 // com.merseyside.jobs/JobEvent.Done.component1|component1(){}[0]
+        final fun copy(#A1 = ...): com.merseyside.jobs/JobEvent.Done<#A1> // com.merseyside.jobs/JobEvent.Done.copy|copy(1:0){}[0]
+        final fun equals(kotlin/Any?): kotlin/Boolean // com.merseyside.jobs/JobEvent.Done.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // com.merseyside.jobs/JobEvent.Done.hashCode|hashCode(){}[0]
+        final fun toString(): kotlin/String // com.merseyside.jobs/JobEvent.Done.toString|toString(){}[0]
+    }
+
+    final class Scheduled : com.merseyside.jobs/JobEvent<kotlin/Nothing, kotlin/Nothing> { // com.merseyside.jobs/JobEvent.Scheduled|null[0]
+        constructor <init>(kotlin/Throwable, kotlin/Int) // com.merseyside.jobs/JobEvent.Scheduled.<init>|<init>(kotlin.Throwable;kotlin.Int){}[0]
+
+        final val attempt // com.merseyside.jobs/JobEvent.Scheduled.attempt|{}attempt[0]
+            final fun <get-attempt>(): kotlin/Int // com.merseyside.jobs/JobEvent.Scheduled.attempt.<get-attempt>|<get-attempt>(){}[0]
+        final val error // com.merseyside.jobs/JobEvent.Scheduled.error|{}error[0]
+            final fun <get-error>(): kotlin/Throwable // com.merseyside.jobs/JobEvent.Scheduled.error.<get-error>|<get-error>(){}[0]
+
+        final fun component1(): kotlin/Throwable // com.merseyside.jobs/JobEvent.Scheduled.component1|component1(){}[0]
+        final fun component2(): kotlin/Int // com.merseyside.jobs/JobEvent.Scheduled.component2|component2(){}[0]
+        final fun copy(kotlin/Throwable = ..., kotlin/Int = ...): com.merseyside.jobs/JobEvent.Scheduled // com.merseyside.jobs/JobEvent.Scheduled.copy|copy(kotlin.Throwable;kotlin.Int){}[0]
+        final fun equals(kotlin/Any?): kotlin/Boolean // com.merseyside.jobs/JobEvent.Scheduled.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // com.merseyside.jobs/JobEvent.Scheduled.hashCode|hashCode(){}[0]
+        final fun toString(): kotlin/String // com.merseyside.jobs/JobEvent.Scheduled.toString|toString(){}[0]
+    }
+
+    final object Stopped : com.merseyside.jobs/JobEvent<kotlin/Nothing, kotlin/Nothing> { // com.merseyside.jobs/JobEvent.Stopped|null[0]
+        final fun equals(kotlin/Any?): kotlin/Boolean // com.merseyside.jobs/JobEvent.Stopped.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // com.merseyside.jobs/JobEvent.Stopped.hashCode|hashCode(){}[0]
+        final fun toString(): kotlin/String // com.merseyside.jobs/JobEvent.Stopped.toString|toString(){}[0]
+    }
+}
+
+sealed interface <#A: out kotlin/Any> com.merseyside.jobs/JobState { // com.merseyside.jobs/JobState|null[0]
+    open val isFinished // com.merseyside.jobs/JobState.isFinished|{}isFinished[0]
+        open fun <get-isFinished>(): kotlin/Boolean // com.merseyside.jobs/JobState.isFinished.<get-isFinished>|<get-isFinished>(){}[0]
+
+    final class <#A1: out kotlin/Any> Success : com.merseyside.jobs/JobState<#A1> { // com.merseyside.jobs/JobState.Success|null[0]
+        constructor <init>(#A1) // com.merseyside.jobs/JobState.Success.<init>|<init>(1:0){}[0]
+
+        final val result // com.merseyside.jobs/JobState.Success.result|{}result[0]
+            final fun <get-result>(): #A1 // com.merseyside.jobs/JobState.Success.result.<get-result>|<get-result>(){}[0]
+
+        final fun component1(): #A1 // com.merseyside.jobs/JobState.Success.component1|component1(){}[0]
+        final fun copy(#A1 = ...): com.merseyside.jobs/JobState.Success<#A1> // com.merseyside.jobs/JobState.Success.copy|copy(1:0){}[0]
+        final fun equals(kotlin/Any?): kotlin/Boolean // com.merseyside.jobs/JobState.Success.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // com.merseyside.jobs/JobState.Success.hashCode|hashCode(){}[0]
+        final fun toString(): kotlin/String // com.merseyside.jobs/JobState.Success.toString|toString(){}[0]
+    }
+
+    final class Failed : com.merseyside.jobs/JobState<kotlin/Nothing> { // com.merseyside.jobs/JobState.Failed|null[0]
+        constructor <init>(kotlin/Throwable) // com.merseyside.jobs/JobState.Failed.<init>|<init>(kotlin.Throwable){}[0]
+
+        final val error // com.merseyside.jobs/JobState.Failed.error|{}error[0]
+            final fun <get-error>(): kotlin/Throwable // com.merseyside.jobs/JobState.Failed.error.<get-error>|<get-error>(){}[0]
+
+        final fun component1(): kotlin/Throwable // com.merseyside.jobs/JobState.Failed.component1|component1(){}[0]
+        final fun copy(kotlin/Throwable = ...): com.merseyside.jobs/JobState.Failed // com.merseyside.jobs/JobState.Failed.copy|copy(kotlin.Throwable){}[0]
+        final fun equals(kotlin/Any?): kotlin/Boolean // com.merseyside.jobs/JobState.Failed.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // com.merseyside.jobs/JobState.Failed.hashCode|hashCode(){}[0]
+        final fun toString(): kotlin/String // com.merseyside.jobs/JobState.Failed.toString|toString(){}[0]
+    }
+
+    final class Running : com.merseyside.jobs/JobState<kotlin/Nothing> { // com.merseyside.jobs/JobState.Running|null[0]
+        constructor <init>(com.merseyside.jobs/JobProgress?) // com.merseyside.jobs/JobState.Running.<init>|<init>(com.merseyside.jobs.JobProgress?){}[0]
+
+        final val progress // com.merseyside.jobs/JobState.Running.progress|{}progress[0]
+            final fun <get-progress>(): com.merseyside.jobs/JobProgress? // com.merseyside.jobs/JobState.Running.progress.<get-progress>|<get-progress>(){}[0]
+
+        final fun component1(): com.merseyside.jobs/JobProgress? // com.merseyside.jobs/JobState.Running.component1|component1(){}[0]
+        final fun copy(com.merseyside.jobs/JobProgress? = ...): com.merseyside.jobs/JobState.Running // com.merseyside.jobs/JobState.Running.copy|copy(com.merseyside.jobs.JobProgress?){}[0]
+        final fun equals(kotlin/Any?): kotlin/Boolean // com.merseyside.jobs/JobState.Running.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // com.merseyside.jobs/JobState.Running.hashCode|hashCode(){}[0]
+        final fun toString(): kotlin/String // com.merseyside.jobs/JobState.Running.toString|toString(){}[0]
+    }
+
+    final class Waiting : com.merseyside.jobs/JobState<kotlin/Nothing> { // com.merseyside.jobs/JobState.Waiting|null[0]
+        constructor <init>(kotlin/Throwable, kotlin/Int) // com.merseyside.jobs/JobState.Waiting.<init>|<init>(kotlin.Throwable;kotlin.Int){}[0]
+
+        final val attempt // com.merseyside.jobs/JobState.Waiting.attempt|{}attempt[0]
+            final fun <get-attempt>(): kotlin/Int // com.merseyside.jobs/JobState.Waiting.attempt.<get-attempt>|<get-attempt>(){}[0]
+        final val error // com.merseyside.jobs/JobState.Waiting.error|{}error[0]
+            final fun <get-error>(): kotlin/Throwable // com.merseyside.jobs/JobState.Waiting.error.<get-error>|<get-error>(){}[0]
+
+        final fun component1(): kotlin/Throwable // com.merseyside.jobs/JobState.Waiting.component1|component1(){}[0]
+        final fun component2(): kotlin/Int // com.merseyside.jobs/JobState.Waiting.component2|component2(){}[0]
+        final fun copy(kotlin/Throwable = ..., kotlin/Int = ...): com.merseyside.jobs/JobState.Waiting // com.merseyside.jobs/JobState.Waiting.copy|copy(kotlin.Throwable;kotlin.Int){}[0]
+        final fun equals(kotlin/Any?): kotlin/Boolean // com.merseyside.jobs/JobState.Waiting.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // com.merseyside.jobs/JobState.Waiting.hashCode|hashCode(){}[0]
+        final fun toString(): kotlin/String // com.merseyside.jobs/JobState.Waiting.toString|toString(){}[0]
+    }
+
+    final object Cancelled : com.merseyside.jobs/JobState<kotlin/Nothing> { // com.merseyside.jobs/JobState.Cancelled|null[0]
+        final fun equals(kotlin/Any?): kotlin/Boolean // com.merseyside.jobs/JobState.Cancelled.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // com.merseyside.jobs/JobState.Cancelled.hashCode|hashCode(){}[0]
+        final fun toString(): kotlin/String // com.merseyside.jobs/JobState.Cancelled.toString|toString(){}[0]
+    }
+}
+
+sealed interface com.merseyside.jobs/ExecutionStrategy { // com.merseyside.jobs/ExecutionStrategy|null[0]
+    final class Sequential : com.merseyside.jobs/ExecutionStrategy { // com.merseyside.jobs/ExecutionStrategy.Sequential|null[0]
+        constructor <init>(com.merseyside.jobs/QueueFailure = ...) // com.merseyside.jobs/ExecutionStrategy.Sequential.<init>|<init>(com.merseyside.jobs.QueueFailure){}[0]
+
+        final val onFailure // com.merseyside.jobs/ExecutionStrategy.Sequential.onFailure|{}onFailure[0]
+            final fun <get-onFailure>(): com.merseyside.jobs/QueueFailure // com.merseyside.jobs/ExecutionStrategy.Sequential.onFailure.<get-onFailure>|<get-onFailure>(){}[0]
+
+        final fun component1(): com.merseyside.jobs/QueueFailure // com.merseyside.jobs/ExecutionStrategy.Sequential.component1|component1(){}[0]
+        final fun copy(com.merseyside.jobs/QueueFailure = ...): com.merseyside.jobs/ExecutionStrategy.Sequential // com.merseyside.jobs/ExecutionStrategy.Sequential.copy|copy(com.merseyside.jobs.QueueFailure){}[0]
+        final fun equals(kotlin/Any?): kotlin/Boolean // com.merseyside.jobs/ExecutionStrategy.Sequential.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // com.merseyside.jobs/ExecutionStrategy.Sequential.hashCode|hashCode(){}[0]
+        final fun toString(): kotlin/String // com.merseyside.jobs/ExecutionStrategy.Sequential.toString|toString(){}[0]
+    }
+
+    final object Parallel : com.merseyside.jobs/ExecutionStrategy { // com.merseyside.jobs/ExecutionStrategy.Parallel|null[0]
+        final fun equals(kotlin/Any?): kotlin/Boolean // com.merseyside.jobs/ExecutionStrategy.Parallel.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // com.merseyside.jobs/ExecutionStrategy.Parallel.hashCode|hashCode(){}[0]
+        final fun toString(): kotlin/String // com.merseyside.jobs/ExecutionStrategy.Parallel.toString|toString(){}[0]
+    }
+}
+
+sealed interface com.merseyside.jobs/RetryPolicy { // com.merseyside.jobs/RetryPolicy|null[0]
+    final class Backoff : com.merseyside.jobs/RetryPolicy { // com.merseyside.jobs/RetryPolicy.Backoff|null[0]
+        constructor <init>(com.merseyside.merseyLib.time.units/TimeUnit = ..., com.merseyside.merseyLib.time.units/TimeUnit = ...) // com.merseyside.jobs/RetryPolicy.Backoff.<init>|<init>(com.merseyside.merseyLib.time.units.TimeUnit;com.merseyside.merseyLib.time.units.TimeUnit){}[0]
+
+        final val base // com.merseyside.jobs/RetryPolicy.Backoff.base|{}base[0]
+            final fun <get-base>(): com.merseyside.merseyLib.time.units/TimeUnit // com.merseyside.jobs/RetryPolicy.Backoff.base.<get-base>|<get-base>(){}[0]
+        final val max // com.merseyside.jobs/RetryPolicy.Backoff.max|{}max[0]
+            final fun <get-max>(): com.merseyside.merseyLib.time.units/TimeUnit // com.merseyside.jobs/RetryPolicy.Backoff.max.<get-max>|<get-max>(){}[0]
+
+        final fun component1(): com.merseyside.merseyLib.time.units/TimeUnit // com.merseyside.jobs/RetryPolicy.Backoff.component1|component1(){}[0]
+        final fun component2(): com.merseyside.merseyLib.time.units/TimeUnit // com.merseyside.jobs/RetryPolicy.Backoff.component2|component2(){}[0]
+        final fun copy(com.merseyside.merseyLib.time.units/TimeUnit = ..., com.merseyside.merseyLib.time.units/TimeUnit = ...): com.merseyside.jobs/RetryPolicy.Backoff // com.merseyside.jobs/RetryPolicy.Backoff.copy|copy(com.merseyside.merseyLib.time.units.TimeUnit;com.merseyside.merseyLib.time.units.TimeUnit){}[0]
+        final fun delayAfter(kotlin/Int): com.merseyside.merseyLib.time.units/TimeUnit // com.merseyside.jobs/RetryPolicy.Backoff.delayAfter|delayAfter(kotlin.Int){}[0]
+        final fun equals(kotlin/Any?): kotlin/Boolean // com.merseyside.jobs/RetryPolicy.Backoff.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // com.merseyside.jobs/RetryPolicy.Backoff.hashCode|hashCode(){}[0]
+        final fun toString(): kotlin/String // com.merseyside.jobs/RetryPolicy.Backoff.toString|toString(){}[0]
+
+        final object Companion { // com.merseyside.jobs/RetryPolicy.Backoff.Companion|null[0]
+            final val DEFAULT_BASE // com.merseyside.jobs/RetryPolicy.Backoff.Companion.DEFAULT_BASE|{}DEFAULT_BASE[0]
+                final fun <get-DEFAULT_BASE>(): com.merseyside.merseyLib.time.units/TimeUnit // com.merseyside.jobs/RetryPolicy.Backoff.Companion.DEFAULT_BASE.<get-DEFAULT_BASE>|<get-DEFAULT_BASE>(){}[0]
+            final val DEFAULT_MAX // com.merseyside.jobs/RetryPolicy.Backoff.Companion.DEFAULT_MAX|{}DEFAULT_MAX[0]
+                final fun <get-DEFAULT_MAX>(): com.merseyside.merseyLib.time.units/TimeUnit // com.merseyside.jobs/RetryPolicy.Backoff.Companion.DEFAULT_MAX.<get-DEFAULT_MAX>|<get-DEFAULT_MAX>(){}[0]
+        }
+    }
+
+    final object OnDemand : com.merseyside.jobs/RetryPolicy { // com.merseyside.jobs/RetryPolicy.OnDemand|null[0]
+        final fun equals(kotlin/Any?): kotlin/Boolean // com.merseyside.jobs/RetryPolicy.OnDemand.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // com.merseyside.jobs/RetryPolicy.OnDemand.hashCode|hashCode(){}[0]
+        final fun toString(): kotlin/String // com.merseyside.jobs/RetryPolicy.OnDemand.toString|toString(){}[0]
+    }
+}
+
+abstract class <#A: kotlin/Any, #B: kotlin/Any, #C: com.merseyside.jobs/JobProgress> com.merseyside.jobs/JobFlowUseCase { // com.merseyside.jobs/JobFlowUseCase|null[0]
+    constructor <init>(com.merseyside.jobs/JobRunner, com.merseyside.jobs/JobSpec<#B, #A>, kotlin/Function1<com.merseyside.jobs/JobProgress, #C?>) // com.merseyside.jobs/JobFlowUseCase.<init>|<init>(com.merseyside.jobs.JobRunner;com.merseyside.jobs.JobSpec<1:1,1:0>;kotlin.Function1<com.merseyside.jobs.JobProgress,1:2?>){}[0]
+
+    final fun execute(#B): kotlinx.coroutines.flow/Flow<com.merseyside.jobs/JobEvent<#A, #C>> // com.merseyside.jobs/JobFlowUseCase.execute|execute(1:1){}[0]
+    final fun ongoing(): kotlinx.coroutines.flow/Flow<com.merseyside.jobs/JobEvent<#A, #C>> // com.merseyside.jobs/JobFlowUseCase.ongoing|ongoing(){}[0]
+}
+
+abstract class <#A: kotlin/Any, #B: kotlin/Any, #C: kotlin/Any, #D: kotlin/Any> com.merseyside.jobs/JobCrudUseCase { // com.merseyside.jobs/JobCrudUseCase|null[0]
+    constructor <init>(com.merseyside.jobs/JobUseCase<#A, #B>, com.merseyside.jobs/JobUseCase<#A, #C>, com.merseyside.jobs/JobUseCase<*, #D>) // com.merseyside.jobs/JobCrudUseCase.<init>|<init>(com.merseyside.jobs.JobUseCase<1:0,1:1>;com.merseyside.jobs.JobUseCase<1:0,1:2>;com.merseyside.jobs.JobUseCase<*,1:3>){}[0]
+
+    final fun create(kotlinx.coroutines/CoroutineScope, #B): kotlinx.coroutines/Job // com.merseyside.jobs/JobCrudUseCase.create|create(kotlinx.coroutines.CoroutineScope;1:1){}[0]
+    final fun delete(kotlinx.coroutines/CoroutineScope, #D, kotlin/Function0<kotlin/Unit> = ...): kotlinx.coroutines/Job // com.merseyside.jobs/JobCrudUseCase.delete|delete(kotlinx.coroutines.CoroutineScope;1:3;kotlin.Function0<kotlin.Unit>){}[0]
+    final fun deleteCreating(kotlinx.coroutines/CoroutineScope, #B, kotlin/Function0<kotlin/Unit> = ...): kotlinx.coroutines/Job // com.merseyside.jobs/JobCrudUseCase.deleteCreating|deleteCreating(kotlinx.coroutines.CoroutineScope;1:1;kotlin.Function0<kotlin.Unit>){}[0]
+    final fun observeCreating(kotlinx.coroutines/CoroutineScope, kotlin/String?, kotlin/Function2<#B, kotlin/Throwable, kotlin/Unit> = ..., kotlin/Function1<#B, kotlin/Unit> = ..., kotlin/Function2<#B, #A, kotlin/Unit> = ..., kotlin/Function2<#B, kotlin/Throwable, kotlin/Unit> = ...): kotlinx.coroutines/Job // com.merseyside.jobs/JobCrudUseCase.observeCreating|observeCreating(kotlinx.coroutines.CoroutineScope;kotlin.String?;kotlin.Function2<1:1,kotlin.Throwable,kotlin.Unit>;kotlin.Function1<1:1,kotlin.Unit>;kotlin.Function2<1:1,1:0,kotlin.Unit>;kotlin.Function2<1:1,kotlin.Throwable,kotlin.Unit>){}[0]
+    final fun retryCreating(kotlinx.coroutines/CoroutineScope, #B): kotlinx.coroutines/Job // com.merseyside.jobs/JobCrudUseCase.retryCreating|retryCreating(kotlinx.coroutines.CoroutineScope;1:1){}[0]
+    final fun update(kotlinx.coroutines/CoroutineScope, #C, kotlin/Function1<#A, kotlin/Unit> = ...): kotlinx.coroutines/Job // com.merseyside.jobs/JobCrudUseCase.update|update(kotlinx.coroutines.CoroutineScope;1:2;kotlin.Function1<1:0,kotlin.Unit>){}[0]
+    final fun updateCreating(kotlinx.coroutines/CoroutineScope, #B, #B): kotlinx.coroutines/Job // com.merseyside.jobs/JobCrudUseCase.updateCreating|updateCreating(kotlinx.coroutines.CoroutineScope;1:1;1:1){}[0]
+}
+
+abstract class <#A: kotlin/Any, #B: kotlin/Any> com.merseyside.jobs/JobUseCase { // com.merseyside.jobs/JobUseCase|null[0]
+    constructor <init>(com.merseyside.jobs/JobRunner, com.merseyside.jobs/JobSpec<#B, #A>, kotlin/Boolean = ...) // com.merseyside.jobs/JobUseCase.<init>|<init>(com.merseyside.jobs.JobRunner;com.merseyside.jobs.JobSpec<1:1,1:0>;kotlin.Boolean){}[0]
+
+    final fun execute(kotlinx.coroutines/CoroutineScope, #B, kotlin/Function0<kotlin/Unit> = ..., kotlin/Function1<kotlin/Throwable, kotlin/Unit> = ..., kotlin/Function1<#A, kotlin/Unit> = ..., kotlin/Function1<kotlin/Throwable, kotlin/Unit> = ...): kotlinx.coroutines/Job // com.merseyside.jobs/JobUseCase.execute|execute(kotlinx.coroutines.CoroutineScope;1:1;kotlin.Function0<kotlin.Unit>;kotlin.Function1<kotlin.Throwable,kotlin.Unit>;kotlin.Function1<1:0,kotlin.Unit>;kotlin.Function1<kotlin.Throwable,kotlin.Unit>){}[0]
+    final fun observeOngoing(kotlinx.coroutines/CoroutineScope, kotlin/String? = ..., kotlin/Function2<#B, kotlin/Throwable, kotlin/Unit> = ..., kotlin/Function1<#B, kotlin/Unit> = ..., kotlin/Function2<#B, #A, kotlin/Unit> = ..., kotlin/Function2<#B, kotlin/Throwable, kotlin/Unit> = ...): kotlinx.coroutines/Job // com.merseyside.jobs/JobUseCase.observeOngoing|observeOngoing(kotlinx.coroutines.CoroutineScope;kotlin.String?;kotlin.Function2<1:1,kotlin.Throwable,kotlin.Unit>;kotlin.Function1<1:1,kotlin.Unit>;kotlin.Function2<1:1,1:0,kotlin.Unit>;kotlin.Function2<1:1,kotlin.Throwable,kotlin.Unit>){}[0]
+    final suspend fun cancel(#B): kotlin/Boolean // com.merseyside.jobs/JobUseCase.cancel|cancel(1:1){}[0]
+    final suspend fun invoke(#B): #A // com.merseyside.jobs/JobUseCase.invoke|invoke(1:1){}[0]
+    final suspend fun replace(#B, #B): kotlin/Boolean // com.merseyside.jobs/JobUseCase.replace|replace(1:1;1:1){}[0]
+    open fun ownerKeyOf(#B): kotlin/String? // com.merseyside.jobs/JobUseCase.ownerKeyOf|ownerKeyOf(1:1){}[0]
+}
+
+final class <#A: kotlin/Any, #B: kotlin/Any> com.merseyside.jobs/OngoingJob { // com.merseyside.jobs/OngoingJob|null[0]
+    constructor <init>(#A, com.merseyside.jobs/JobHandle<#B>) // com.merseyside.jobs/OngoingJob.<init>|<init>(1:0;com.merseyside.jobs.JobHandle<1:1>){}[0]
+
+    final val handle // com.merseyside.jobs/OngoingJob.handle|{}handle[0]
+        final fun <get-handle>(): com.merseyside.jobs/JobHandle<#B> // com.merseyside.jobs/OngoingJob.handle.<get-handle>|<get-handle>(){}[0]
+    final val params // com.merseyside.jobs/OngoingJob.params|{}params[0]
+        final fun <get-params>(): #A // com.merseyside.jobs/OngoingJob.params.<get-params>|<get-params>(){}[0]
+
+    final fun component1(): #A // com.merseyside.jobs/OngoingJob.component1|component1(){}[0]
+    final fun component2(): com.merseyside.jobs/JobHandle<#B> // com.merseyside.jobs/OngoingJob.component2|component2(){}[0]
+    final fun copy(#A = ..., com.merseyside.jobs/JobHandle<#B> = ...): com.merseyside.jobs/OngoingJob<#A, #B> // com.merseyside.jobs/OngoingJob.copy|copy(1:0;com.merseyside.jobs.JobHandle<1:1>){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // com.merseyside.jobs/OngoingJob.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // com.merseyside.jobs/OngoingJob.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // com.merseyside.jobs/OngoingJob.toString|toString(){}[0]
+}
+
+final class com.merseyside.jobs.storage/InMemoryJobStorage : com.merseyside.jobs.storage/JobStorage { // com.merseyside.jobs.storage/InMemoryJobStorage|null[0]
+    constructor <init>() // com.merseyside.jobs.storage/InMemoryJobStorage.<init>|<init>(){}[0]
+
+    final suspend fun activeJobs(): kotlin.collections/List<com.merseyside.jobs.storage/JobRecord> // com.merseyside.jobs.storage/InMemoryJobStorage.activeJobs|activeJobs(){}[0]
+    final suspend fun compensatingJobs(): kotlin.collections/List<com.merseyside.jobs.storage/JobRecord> // com.merseyside.jobs.storage/InMemoryJobStorage.compensatingJobs|compensatingJobs(){}[0]
+    final suspend fun failedJobs(): kotlin.collections/List<com.merseyside.jobs.storage/JobRecord> // com.merseyside.jobs.storage/InMemoryJobStorage.failedJobs|failedJobs(){}[0]
+    final suspend fun findJob(kotlin/String, kotlin/String): com.merseyside.jobs.storage/JobRecord? // com.merseyside.jobs.storage/InMemoryJobStorage.findJob|findJob(kotlin.String;kotlin.String){}[0]
+    final suspend fun removeJob(com.merseyside.jobs/JobId) // com.merseyside.jobs.storage/InMemoryJobStorage.removeJob|removeJob(com.merseyside.jobs.JobId){}[0]
+    final suspend fun saveJob(com.merseyside.jobs.storage/JobRecord) // com.merseyside.jobs.storage/InMemoryJobStorage.saveJob|saveJob(com.merseyside.jobs.storage.JobRecord){}[0]
+    final suspend fun saveStep(com.merseyside.jobs/JobId, kotlin/String, kotlin/String) // com.merseyside.jobs.storage/InMemoryJobStorage.saveStep|saveStep(com.merseyside.jobs.JobId;kotlin.String;kotlin.String){}[0]
+    final suspend fun setActive(com.merseyside.jobs/JobId, kotlin/Boolean) // com.merseyside.jobs.storage/InMemoryJobStorage.setActive|setActive(com.merseyside.jobs.JobId;kotlin.Boolean){}[0]
+    final suspend fun setCompensating(com.merseyside.jobs/JobId) // com.merseyside.jobs.storage/InMemoryJobStorage.setCompensating|setCompensating(com.merseyside.jobs.JobId){}[0]
+    final suspend fun setFailed(com.merseyside.jobs/JobId) // com.merseyside.jobs.storage/InMemoryJobStorage.setFailed|setFailed(com.merseyside.jobs.JobId){}[0]
+    final suspend fun steps(com.merseyside.jobs/JobId): kotlin.collections/Map<kotlin/String, kotlin/String> // com.merseyside.jobs.storage/InMemoryJobStorage.steps|steps(com.merseyside.jobs.JobId){}[0]
+}
+
+final class com.merseyside.jobs.storage/JobRecord { // com.merseyside.jobs.storage/JobRecord|null[0]
+    constructor <init>(com.merseyside.jobs/JobId, kotlin/String, kotlin/String, com.merseyside.merseyLib.time.units/TimeUnit, kotlin/String?, kotlin/Boolean, kotlin/Boolean = ..., kotlin/Boolean = ...) // com.merseyside.jobs.storage/JobRecord.<init>|<init>(com.merseyside.jobs.JobId;kotlin.String;kotlin.String;com.merseyside.merseyLib.time.units.TimeUnit;kotlin.String?;kotlin.Boolean;kotlin.Boolean;kotlin.Boolean){}[0]
+
+    final val createdAt // com.merseyside.jobs.storage/JobRecord.createdAt|{}createdAt[0]
+        final fun <get-createdAt>(): com.merseyside.merseyLib.time.units/TimeUnit // com.merseyside.jobs.storage/JobRecord.createdAt.<get-createdAt>|<get-createdAt>(){}[0]
+    final val id // com.merseyside.jobs.storage/JobRecord.id|{}id[0]
+        final fun <get-id>(): com.merseyside.jobs/JobId // com.merseyside.jobs.storage/JobRecord.id.<get-id>|<get-id>(){}[0]
+    final val isActive // com.merseyside.jobs.storage/JobRecord.isActive|{}isActive[0]
+        final fun <get-isActive>(): kotlin/Boolean // com.merseyside.jobs.storage/JobRecord.isActive.<get-isActive>|<get-isActive>(){}[0]
+    final val isCompensating // com.merseyside.jobs.storage/JobRecord.isCompensating|{}isCompensating[0]
+        final fun <get-isCompensating>(): kotlin/Boolean // com.merseyside.jobs.storage/JobRecord.isCompensating.<get-isCompensating>|<get-isCompensating>(){}[0]
+    final val isFailed // com.merseyside.jobs.storage/JobRecord.isFailed|{}isFailed[0]
+        final fun <get-isFailed>(): kotlin/Boolean // com.merseyside.jobs.storage/JobRecord.isFailed.<get-isFailed>|<get-isFailed>(){}[0]
+    final val ownerKey // com.merseyside.jobs.storage/JobRecord.ownerKey|{}ownerKey[0]
+        final fun <get-ownerKey>(): kotlin/String? // com.merseyside.jobs.storage/JobRecord.ownerKey.<get-ownerKey>|<get-ownerKey>(){}[0]
+    final val params // com.merseyside.jobs.storage/JobRecord.params|{}params[0]
+        final fun <get-params>(): kotlin/String // com.merseyside.jobs.storage/JobRecord.params.<get-params>|<get-params>(){}[0]
+    final val type // com.merseyside.jobs.storage/JobRecord.type|{}type[0]
+        final fun <get-type>(): kotlin/String // com.merseyside.jobs.storage/JobRecord.type.<get-type>|<get-type>(){}[0]
+
+    final fun component1(): com.merseyside.jobs/JobId // com.merseyside.jobs.storage/JobRecord.component1|component1(){}[0]
+    final fun component2(): kotlin/String // com.merseyside.jobs.storage/JobRecord.component2|component2(){}[0]
+    final fun component3(): kotlin/String // com.merseyside.jobs.storage/JobRecord.component3|component3(){}[0]
+    final fun component4(): com.merseyside.merseyLib.time.units/TimeUnit // com.merseyside.jobs.storage/JobRecord.component4|component4(){}[0]
+    final fun component5(): kotlin/String? // com.merseyside.jobs.storage/JobRecord.component5|component5(){}[0]
+    final fun component6(): kotlin/Boolean // com.merseyside.jobs.storage/JobRecord.component6|component6(){}[0]
+    final fun component7(): kotlin/Boolean // com.merseyside.jobs.storage/JobRecord.component7|component7(){}[0]
+    final fun component8(): kotlin/Boolean // com.merseyside.jobs.storage/JobRecord.component8|component8(){}[0]
+    final fun copy(com.merseyside.jobs/JobId = ..., kotlin/String = ..., kotlin/String = ..., com.merseyside.merseyLib.time.units/TimeUnit = ..., kotlin/String? = ..., kotlin/Boolean = ..., kotlin/Boolean = ..., kotlin/Boolean = ...): com.merseyside.jobs.storage/JobRecord // com.merseyside.jobs.storage/JobRecord.copy|copy(com.merseyside.jobs.JobId;kotlin.String;kotlin.String;com.merseyside.merseyLib.time.units.TimeUnit;kotlin.String?;kotlin.Boolean;kotlin.Boolean;kotlin.Boolean){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // com.merseyside.jobs.storage/JobRecord.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // com.merseyside.jobs.storage/JobRecord.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // com.merseyside.jobs.storage/JobRecord.toString|toString(){}[0]
+}
+
+final class com.merseyside.jobs/JobCancelledException : kotlin/RuntimeException { // com.merseyside.jobs/JobCancelledException|null[0]
+    constructor <init>(com.merseyside.jobs/JobId) // com.merseyside.jobs/JobCancelledException.<init>|<init>(com.merseyside.jobs.JobId){}[0]
+
+    final val jobId // com.merseyside.jobs/JobCancelledException.jobId|{}jobId[0]
+        final fun <get-jobId>(): com.merseyside.jobs/JobId // com.merseyside.jobs/JobCancelledException.jobId.<get-jobId>|<get-jobId>(){}[0]
+}
+
+final class com.merseyside.jobs/JobFailedBeforeRestartException : kotlin/RuntimeException { // com.merseyside.jobs/JobFailedBeforeRestartException|null[0]
+    constructor <init>(com.merseyside.jobs/JobId) // com.merseyside.jobs/JobFailedBeforeRestartException.<init>|<init>(com.merseyside.jobs.JobId){}[0]
+
+    final val jobId // com.merseyside.jobs/JobFailedBeforeRestartException.jobId|{}jobId[0]
+        final fun <get-jobId>(): com.merseyside.jobs/JobId // com.merseyside.jobs/JobFailedBeforeRestartException.jobId.<get-jobId>|<get-jobId>(){}[0]
+}
+
+final class com.merseyside.jobs/JobQueueFailedException : kotlin/RuntimeException { // com.merseyside.jobs/JobQueueFailedException|null[0]
+    constructor <init>(com.merseyside.jobs/JobId, com.merseyside.jobs/JobId, kotlin/Throwable) // com.merseyside.jobs/JobQueueFailedException.<init>|<init>(com.merseyside.jobs.JobId;com.merseyside.jobs.JobId;kotlin.Throwable){}[0]
+
+    final val failedJobId // com.merseyside.jobs/JobQueueFailedException.failedJobId|{}failedJobId[0]
+        final fun <get-failedJobId>(): com.merseyside.jobs/JobId // com.merseyside.jobs/JobQueueFailedException.failedJobId.<get-failedJobId>|<get-failedJobId>(){}[0]
+    final val jobId // com.merseyside.jobs/JobQueueFailedException.jobId|{}jobId[0]
+        final fun <get-jobId>(): com.merseyside.jobs/JobId // com.merseyside.jobs/JobQueueFailedException.jobId.<get-jobId>|<get-jobId>(){}[0]
+}
+
+final class com.merseyside.jobs/JobUndoResumedException : kotlin/RuntimeException { // com.merseyside.jobs/JobUndoResumedException|null[0]
+    constructor <init>(com.merseyside.jobs/JobId) // com.merseyside.jobs/JobUndoResumedException.<init>|<init>(com.merseyside.jobs.JobId){}[0]
+
+    final val jobId // com.merseyside.jobs/JobUndoResumedException.jobId|{}jobId[0]
+        final fun <get-jobId>(): com.merseyside.jobs/JobId // com.merseyside.jobs/JobUndoResumedException.jobId.<get-jobId>|<get-jobId>(){}[0]
+}
+
+final class com.merseyside.jobs/ProcessHoldRefusedException : kotlin/RuntimeException { // com.merseyside.jobs/ProcessHoldRefusedException|null[0]
+    constructor <init>(com.merseyside.jobs/JobId) // com.merseyside.jobs/ProcessHoldRefusedException.<init>|<init>(com.merseyside.jobs.JobId){}[0]
+
+    final val jobId // com.merseyside.jobs/ProcessHoldRefusedException.jobId|{}jobId[0]
+        final fun <get-jobId>(): com.merseyside.jobs/JobId // com.merseyside.jobs/ProcessHoldRefusedException.jobId.<get-jobId>|<get-jobId>(){}[0]
+}
+
+final class com.merseyside.jobs/RealJobRunner : com.merseyside.jobs/JobRunner { // com.merseyside.jobs/RealJobRunner|null[0]
+    constructor <init>(kotlin.collections/List<com.merseyside.jobs/JobSpec<*, *>>, com.merseyside.jobs.storage/JobStorage = ..., com.merseyside.jobs.hold/ProcessHold = ..., kotlinx.serialization.json/Json = ..., kotlinx.coroutines/CoroutineScope = ...) // com.merseyside.jobs/RealJobRunner.<init>|<init>(kotlin.collections.List<com.merseyside.jobs.JobSpec<*,*>>;com.merseyside.jobs.storage.JobStorage;com.merseyside.jobs.hold.ProcessHold;kotlinx.serialization.json.Json;kotlinx.coroutines.CoroutineScope){}[0]
+
+    final fun <#A1: kotlin/Any, #B1: kotlin/Any> observe(com.merseyside.jobs/JobSpec<#A1, #B1>, kotlin/String?): kotlinx.coroutines.flow/Flow<com.merseyside.jobs/OngoingJob<#A1, #B1>> // com.merseyside.jobs/RealJobRunner.observe|observe(com.merseyside.jobs.JobSpec<0:0,0:1>;kotlin.String?){0§<kotlin.Any>;1§<kotlin.Any>}[0]
+    final suspend fun <#A1: kotlin/Any, #B1: kotlin/Any> cancelIfIdle(com.merseyside.jobs/JobSpec<#A1, #B1>, #A1): kotlin/Boolean // com.merseyside.jobs/RealJobRunner.cancelIfIdle|cancelIfIdle(com.merseyside.jobs.JobSpec<0:0,0:1>;0:0){0§<kotlin.Any>;1§<kotlin.Any>}[0]
+    final suspend fun <#A1: kotlin/Any, #B1: kotlin/Any> current(com.merseyside.jobs/JobSpec<#A1, #B1>): com.merseyside.jobs/OngoingJob<#A1, #B1>? // com.merseyside.jobs/RealJobRunner.current|current(com.merseyside.jobs.JobSpec<0:0,0:1>){0§<kotlin.Any>;1§<kotlin.Any>}[0]
+    final suspend fun <#A1: kotlin/Any, #B1: kotlin/Any> ongoing(com.merseyside.jobs/JobSpec<#A1, #B1>, kotlin/String?): kotlin.collections/List<com.merseyside.jobs/OngoingJob<#A1, #B1>> // com.merseyside.jobs/RealJobRunner.ongoing|ongoing(com.merseyside.jobs.JobSpec<0:0,0:1>;kotlin.String?){0§<kotlin.Any>;1§<kotlin.Any>}[0]
+    final suspend fun <#A1: kotlin/Any, #B1: kotlin/Any> replace(com.merseyside.jobs/JobSpec<#A1, #B1>, #A1, #A1, kotlin/String?): com.merseyside.jobs/JobHandle<#B1>? // com.merseyside.jobs/RealJobRunner.replace|replace(com.merseyside.jobs.JobSpec<0:0,0:1>;0:0;0:0;kotlin.String?){0§<kotlin.Any>;1§<kotlin.Any>}[0]
+    final suspend fun <#A1: kotlin/Any, #B1: kotlin/Any> start(com.merseyside.jobs/JobSpec<#A1, #B1>, #A1, kotlin/String?, kotlin/Boolean): com.merseyside.jobs/JobHandle<#B1> // com.merseyside.jobs/RealJobRunner.start|start(com.merseyside.jobs.JobSpec<0:0,0:1>;0:0;kotlin.String?;kotlin.Boolean){0§<kotlin.Any>;1§<kotlin.Any>}[0]
+    final suspend fun <#A1: kotlin/Any> handle(com.merseyside.jobs/JobId): com.merseyside.jobs/JobHandle<#A1>? // com.merseyside.jobs/RealJobRunner.handle|handle(com.merseyside.jobs.JobId){0§<kotlin.Any>}[0]
+    final suspend fun cancel(com.merseyside.jobs/JobId) // com.merseyside.jobs/RealJobRunner.cancel|cancel(com.merseyside.jobs.JobId){}[0]
+    final suspend fun restore() // com.merseyside.jobs/RealJobRunner.restore|restore(){}[0]
+}
+
+final value class com.merseyside.jobs/JobId { // com.merseyside.jobs/JobId|null[0]
+    constructor <init>(kotlin/String) // com.merseyside.jobs/JobId.<init>|<init>(kotlin.String){}[0]
+
+    final val value // com.merseyside.jobs/JobId.value|{}value[0]
+        final fun <get-value>(): kotlin/String // com.merseyside.jobs/JobId.value.<get-value>|<get-value>(){}[0]
+
+    final fun equals(kotlin/Any?): kotlin/Boolean // com.merseyside.jobs/JobId.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // com.merseyside.jobs/JobId.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // com.merseyside.jobs/JobId.toString|toString(){}[0]
+
+    final object Companion { // com.merseyside.jobs/JobId.Companion|null[0]
+        final fun random(): com.merseyside.jobs/JobId // com.merseyside.jobs/JobId.Companion.random|random(){}[0]
+    }
+}
+
+final object com.merseyside.jobs.hold/NoProcessHold : com.merseyside.jobs.hold/ProcessHold { // com.merseyside.jobs.hold/NoProcessHold|null[0]
+    final suspend fun acquire(): kotlin/Boolean // com.merseyside.jobs.hold/NoProcessHold.acquire|acquire(){}[0]
+    final suspend fun release() // com.merseyside.jobs.hold/NoProcessHold.release|release(){}[0]
+}
+
+final suspend fun <#A: kotlin/Any> (com.merseyside.jobs/JobHandle<#A>).com.merseyside.jobs/await(): #A // com.merseyside.jobs/await|await@com.merseyside.jobs.JobHandle<0:0>(){0§<kotlin.Any>}[0]
+final suspend inline fun <#A: reified kotlin/Any?> (com.merseyside.jobs/JobScope).com.merseyside.jobs/step(kotlin/String, noinline kotlin.coroutines/SuspendFunction0<#A>): #A // com.merseyside.jobs/step|step@com.merseyside.jobs.JobScope(kotlin.String;kotlin.coroutines.SuspendFunction0<0:0>){0§<kotlin.Any?>}[0]

@@ -1,13 +1,11 @@
 @file:Suppress("UnstableApiUsage")
 
 plugins {
-    // Version comes from the root settings of this build
     id("ru.izibook.gitlab-repository")
 }
 
 dependencyResolutionManagement {
     repositories {
-        // Local first: packages published from a Mac have iOS, the ones from CI don't. Empty on the runner
         mavenLocal()
         izibookGitlab()
         google {

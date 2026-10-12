@@ -1,7 +1,3 @@
-# Публикация библиотеки в Package Registry этого проекта.
-# Тег vX.Y.Z публикует версию библиотеки из каталога, номер в теге должен с ней совпадать.
-# Раннер на Linux: ifBuildIos не включает iOS, в реестр уходит только Android и common.
-
 publish:
   tags:
     - android-deploy
@@ -18,8 +14,8 @@ publish:
     paths:
       - .gradle/
   script:
-    # Версия библиотеки приходит из каталога, поэтому спрашиваем её у Gradle
     - |
       version=$(./gradlew -q :jobs-core:properties --no-daemon | sed -n 's/^version: //p')
     - test "v$version" = "$CI_COMMIT_TAG"
+    - ./gradlew :jobs-core:checkKotlinAbi --no-daemon
     - ./gradlew :jobs-core:publishAllPublicationsToGitLabRepository --no-daemon

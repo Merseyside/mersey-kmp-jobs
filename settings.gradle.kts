@@ -2,7 +2,6 @@
 
 pluginManagement {
     repositories {
-        // Settings plugin with izibookGitlab(), anonymous pull from izi-gradle-repository
         maven("https://gitlab.izibook.ru/api/v4/projects/70/packages/maven") {
             content {
                 includeGroupAndSubgroups("ru.izibook")
@@ -27,7 +26,6 @@ plugins {
 
 dependencyResolutionManagement {
     repositories {
-        // Local first: packages published from a Mac have iOS, the ones from CI don't. Empty on the runner
         mavenLocal()
         izibookGitlab()
         google {

@@ -46,7 +46,6 @@ mavenPublishing {
 }
 
 publishing {
-    // GitLab package registry of this project. Declared only inside GitLab CI.
     val gitlabApiUrl: String? = System.getenv("CI_API_V4_URL")
     if (gitlabApiUrl != null) {
         repositories {
