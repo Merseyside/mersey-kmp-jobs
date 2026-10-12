@@ -1,3 +1,6 @@
+import org.gradle.api.credentials.HttpHeaderCredentials
+import org.gradle.authentication.http.HttpHeaderAuthentication
+
 plugins {
     id("com.vanniktech.maven.publish")
 }
@@ -40,4 +43,24 @@ mavenPublishing {
     }
 
     publishToMavenCentral()
+}
+
+publishing {
+    // GitLab package registry of this project. Declared only inside GitLab CI.
+    val gitlabApiUrl: String? = System.getenv("CI_API_V4_URL")
+    if (gitlabApiUrl != null) {
+        repositories {
+            maven {
+                name = "GitLab"
+                url = uri("$gitlabApiUrl/projects/${System.getenv("CI_PROJECT_ID")}/packages/maven")
+                credentials(HttpHeaderCredentials::class) {
+                    name = "Job-Token"
+                    value = System.getenv("CI_JOB_TOKEN")
+                }
+                authentication {
+                    create<HttpHeaderAuthentication>("header")
+                }
+            }
+        }
+    }
 }

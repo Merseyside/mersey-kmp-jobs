@@ -1,5 +1,11 @@
+plugins {
+    // Version comes from the root settings of this build
+    id("ru.izibook.gitlab-repository")
+}
+
 dependencyResolutionManagement {
     repositories {
+        izibookGitlab()
         google {
             mavenContent {
                 includeGroupAndSubgroups("androidx")
@@ -12,9 +18,12 @@ dependencyResolutionManagement {
         gradlePluginPortal()
     }
 
+    val catalogVersions = "1.8.9"
+    val group = "io.github.merseyside"
+
     versionCatalogs {
         create("catalogGradle") {
-            from("io.github.merseyside:catalog-version-gradle:1.8.8")
+            from("$group:catalog-version-gradle:$catalogVersions")
         }
     }
 }
