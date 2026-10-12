@@ -4,7 +4,8 @@ plugins {
     alias(catalogPlugins.plugins.kotlin.multiplatform)
     alias(catalogPlugins.plugins.android.kotlin.multiplatform.library)
     alias(catalogPlugins.plugins.kotlin.serialization)
-    alias(catalogPlugins.plugins.mersey.kotlin.extension)
+    // Without a version: the plugin comes from the buildSrc classpath, as in the other libraries
+    id("io.github.merseyside.kotlin-extension")
 
     `maven-publish-plugin`
 }

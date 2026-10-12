@@ -1,3 +1,5 @@
+@file:Suppress("UnstableApiUsage")
+
 plugins {
     // Version comes from the root settings of this build
     id("ru.izibook.gitlab-repository")

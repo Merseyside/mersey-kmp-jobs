@@ -9,6 +9,9 @@ plugins {
  */
 dependencies {
     with(catalogGradle) {
+        // The kotlin-extension plugin. Without it on the classpath the alias in jobs-core
+        // is resolved by its catalog version from the repositories
+        implementation(mersey.gradlePlugins)
         implementation(android.gradle)
         implementation(kotlin.gradle)
         implementation(kotlin.serialization)
