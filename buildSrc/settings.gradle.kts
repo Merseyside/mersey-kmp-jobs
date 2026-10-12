@@ -7,6 +7,8 @@ plugins {
 
 dependencyResolutionManagement {
     repositories {
+        // Local first: packages published from a Mac have iOS, the ones from CI don't. Empty on the runner
+        mavenLocal()
         izibookGitlab()
         google {
             mavenContent {
@@ -16,7 +18,6 @@ dependencyResolutionManagement {
             }
         }
         mavenCentral()
-        mavenLocal()
         gradlePluginPortal()
     }
 
