@@ -16,6 +16,7 @@ class InMemoryJobStorage : JobStorage {
     private val mutex = Mutex()
     private val jobs = mutableMapOf<JobId, JobRecord>()
     private val steps = mutableMapOf<JobId, MutableMap<String, String>>()
+    private val schedules = mutableMapOf<String, ScheduleRecord>()
 
     override suspend fun saveJob(record: JobRecord) = mutex.withLock {
         jobs[record.id] = record
@@ -72,5 +73,22 @@ class InMemoryJobStorage : JobStorage {
 
     override suspend fun steps(id: JobId): Map<String, String> = mutex.withLock {
         steps[id]?.toMap().orEmpty()
+    }
+
+    override suspend fun saveSchedule(record: ScheduleRecord) = mutex.withLock {
+        schedules[record.id] = record
+    }
+
+    override suspend fun findSchedule(type: String, params: String): ScheduleRecord? = mutex.withLock {
+        schedules.values.firstOrNull { record -> record.type == type && record.params == params }
+    }
+
+    override suspend fun schedules(): List<ScheduleRecord> = mutex.withLock {
+        schedules.values.toList()
+    }
+
+    override suspend fun removeSchedule(id: String) = mutex.withLock {
+        schedules.remove(id)
+        Unit
     }
 }

@@ -52,4 +52,14 @@ interface JobStorage {
 
     /** Passed steps of a job: step name to its saved result as JSON. */
     suspend fun steps(id: JobId): Map<String, String>
+
+    /** Saves a new schedule or overwrites the one with the same [ScheduleRecord.id]. */
+    suspend fun saveSchedule(record: ScheduleRecord)
+
+    /** The schedule of the very same work, if it is scheduled already. */
+    suspend fun findSchedule(type: String, params: String): ScheduleRecord?
+
+    suspend fun schedules(): List<ScheduleRecord>
+
+    suspend fun removeSchedule(id: String)
 }

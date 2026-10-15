@@ -40,6 +40,9 @@ kotlin {
         androidMain.dependencies {
             // The notification of the foreground service
             implementation(androidLibs.androidx.core)
+
+            // Wake-ups for scheduled work, even when the app is closed
+            implementation(androidLibs.worker)
         }
 
         commonTest.dependencies {
