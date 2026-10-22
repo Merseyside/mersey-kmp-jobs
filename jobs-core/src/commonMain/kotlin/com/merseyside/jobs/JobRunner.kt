@@ -1,5 +1,6 @@
 package com.merseyside.jobs
 
+import com.merseyside.merseyLib.time.units.TimeUnit
 import kotlinx.coroutines.flow.Flow
 
 /**
@@ -125,8 +126,62 @@ interface JobRunner {
      * Called on app start and when the app comes back to the screen. Jobs that
      * finished on their own — with success or with an error — are not revived;
      * the failed ones a kind keeps come back to the registry as failed.
+     *
+     * Scheduled work whose time has come is started here too: in the browser
+     * this is the only moment it goes. The wake-ups of every schedule are asked
+     * for again as well — a request the system lost comes back this way.
      */
     suspend fun restore()
+
+    /**
+     * Starts the work every [every], for as long as it is not [unschedule]d.
+     * The schedule survives app restarts.
+     *
+     * Where the platform can, the app is woken up for it even when closed —
+     * see [com.merseyside.jobs.schedule.JobWakeups]. Everywhere the work is
+     * also started by [restore], if its time has come while the app was away.
+     * Work scheduled for the first time is due right away.
+     *
+     * Scheduling the same work again does not add a second schedule: the
+     * interval and the key are updated, the time of the last run stays.
+     *
+     * @param ownerKey what the started jobs belong to, see [start].
+     */
+    suspend fun <P : Any, R : Any> schedule(
+        spec: JobSpec<P, R>,
+        params: P,
+        every: TimeUnit,
+        ownerKey: String? = null
+    )
+
+    /**
+     * Forgets the schedule. The job already started by it is not touched: it
+     * goes on as any other.
+     */
+    suspend fun <P : Any, R : Any> unschedule(spec: JobSpec<P, R>, params: P)
+
+    /**
+     * Starts the work of the schedule if its time has come, and waits until the
+     * attempt is over: with a result, or with a temporary error. In the second
+     * case the job is left asleep until the next wake-up or [restore] — the
+     * background time is not spent on waiting.
+     *
+     * Called by the platform wake-up, not by the app.
+     *
+     * @return whether the schedule still exists. False means the wake-up is
+     * left from a forgotten schedule and should be cancelled.
+     */
+    suspend fun runScheduled(scheduleId: String): Boolean
+
+    /**
+     * The same as [runScheduled], but for every schedule at once, and the
+     * wake-ups are asked for again afterwards.
+     *
+     * For a platform that wakes the app up once for all the schedules and
+     * forgets the request after that — iOS. Called by the platform wake-up,
+     * not by the app.
+     */
+    suspend fun runDueSchedules()
 }
 
 /**

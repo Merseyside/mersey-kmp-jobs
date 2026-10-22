@@ -4,6 +4,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.withContext
 import platform.UIKit.UIApplication
 import platform.UIKit.UIBackgroundTaskIdentifier
@@ -27,12 +28,17 @@ class IosProcessHold : ProcessHold {
 
     private val mutableExpirations = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
 
-    override val expirations: Flow<Unit> = mutableExpirations.asSharedFlow()
+    // A background task of the schedules runs out of its time the same way
+    override val expirations: Flow<Unit> = merge(mutableExpirations.asSharedFlow(), ScheduledRunHold.expirations)
 
     private var taskId: UIBackgroundTaskIdentifier = UIBackgroundTaskInvalid
 
     /** UIApplication answers the main thread only — hence the switch. */
     override suspend fun acquire(): Boolean = withContext(Dispatchers.Main) {
+        // Scheduled work woken up by a background task: the process is already
+        // held by the task, and it has a time limit of its own
+        if (ScheduledRunHold.isHeld) return@withContext true
+
         if (taskId != UIBackgroundTaskInvalid) return@withContext true
 
         taskId = UIApplication.sharedApplication.beginBackgroundTaskWithName(TASK_NAME) {

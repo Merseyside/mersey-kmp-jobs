@@ -30,6 +30,10 @@ class AndroidProcessHold(
     private val context = context.applicationContext
 
     override suspend fun acquire(): Boolean {
+        // Scheduled work woken up by WorkManager: the process is already held
+        // by the worker, and the service would be refused in the background
+        if (ScheduledRunHold.isHeld) return true
+
         // The notification description is asked for here and not in the
         // constructor: the app's strings are read in a suspending way, and in
         // different languages they are different

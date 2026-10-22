@@ -2,9 +2,12 @@ package com.merseyside.jobs
 
 import com.merseyside.jobs.hold.NoProcessHold
 import com.merseyside.jobs.hold.ProcessHold
+import com.merseyside.jobs.schedule.JobWakeups
+import com.merseyside.jobs.schedule.NoJobWakeups
 import com.merseyside.jobs.storage.InMemoryJobStorage
 import com.merseyside.jobs.storage.JobRecord
 import com.merseyside.jobs.storage.JobStorage
+import com.merseyside.jobs.storage.ScheduleRecord
 import com.merseyside.merseyLib.time.Time
 import com.merseyside.merseyLib.time.units.Millis
 import com.merseyside.merseyLib.time.units.TimeUnit
@@ -44,11 +47,14 @@ import kotlinx.serialization.json.Json
  * @param storage where the progress goes. In memory by default, that is until
  * the app is closed for the first time.
  * @param hold what holds the process. Nothing by default.
+ * @param wakeups what wakes the app up for scheduled work. Nobody by default:
+ * scheduled work then goes only on [restore].
  */
 class RealJobRunner(
     specs: List<JobSpec<*, *>>,
     private val storage: JobStorage = InMemoryJobStorage(),
     private val hold: ProcessHold = NoProcessHold,
+    private val wakeups: JobWakeups = NoJobWakeups,
     private val json: Json = Json,
     private val scope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 ) : JobRunner {
@@ -73,6 +79,12 @@ class RealJobRunner(
      * Separate from [mutex], because a cancellation waits for the undo.
      */
     private val replaceMutex = Mutex()
+
+    /**
+     * Serializes the reads and writes of schedules: a wake-up and [restore]
+     * coming at the same moment must not both find the work due.
+     */
+    private val scheduleMutex = Mutex()
 
     /** The creation time given out last: the next job never gets the same one. */
     private var lastCreatedAt = 0L
@@ -385,6 +397,154 @@ class RealJobRunner(
                 registered.tryEmit(job)
             }
         }
+
+        // Scheduled work whose time came while the app was away. After the
+        // revival: a job of a schedule interrupted midway is already back, and
+        // the start below joins it instead of starting a second one
+        storage.schedules().forEach { record -> startIfDue(record.id, minGap = record.interval) }
+
+        rearmWakeups()
+    }
+
+    override suspend fun <P : Any, R : Any> schedule(
+        spec: JobSpec<P, R>,
+        params: P,
+        every: TimeUnit,
+        ownerKey: String?
+    ) {
+        // A schedule of an unregistered kind would never go: there would be
+        // nobody to start it by its name
+        require(spec.type in specs) { "Job type \"${spec.type}\" is not registered in the runner" }
+
+        val encodedParams = json.encodeToString(spec.paramsSerializer, params)
+
+        val record = scheduleMutex.withLock {
+            val record = storage.findSchedule(spec.type, encodedParams)
+                ?.copy(interval = every, ownerKey = ownerKey)
+                ?: ScheduleRecord(
+                    id = JobId.random().value,
+                    type = spec.type,
+                    params = encodedParams,
+                    interval = every,
+                    ownerKey = ownerKey,
+                    lastRunAt = null
+                )
+
+            storage.saveSchedule(record)
+
+            record
+        }
+
+        wakeups.register(record.id, every)
+    }
+
+    override suspend fun <P : Any, R : Any> unschedule(spec: JobSpec<P, R>, params: P) {
+        val encodedParams = json.encodeToString(spec.paramsSerializer, params)
+
+        val record = scheduleMutex.withLock {
+            storage.findSchedule(spec.type, encodedParams)
+                ?.also { record -> storage.removeSchedule(record.id) }
+        } ?: return
+
+        wakeups.unregister(record.id)
+    }
+
+    override suspend fun runScheduled(scheduleId: String): Boolean {
+        val record = scheduleMutex.withLock {
+            storage.schedules().firstOrNull { record -> record.id == scheduleId }
+        } ?: return false
+
+        val handle = startIfDue(record.id, minGap = record.wakeUpGap) ?: return true
+
+        handle.awaitAttempt(initial = handle.state.value)
+
+        return true
+    }
+
+    override suspend fun runDueSchedules() {
+        // The states are taken right at the start: the jobs go side by side,
+        // and by the time the first one is awaited the second may have moved on
+        val started = storage.schedules()
+            .mapNotNull { record -> startIfDue(record.id, minGap = record.wakeUpGap) }
+            .map { handle -> handle to handle.state.value }
+
+        // The system has used the request up: the next one is asked for before
+        // the waiting, not after it. The time may run out midway — and then
+        // nothing after the waiting is reached, and the next wake-up would
+        // never be asked for
+        rearmWakeups()
+
+        started.forEach { (handle, initial) -> handle.awaitAttempt(initial) }
+    }
+
+    /**
+     * Waits until the attempt is over: with a result, or with a temporary
+     * error.
+     *
+     * A job asleep after an earlier temporary error is woken by the start but
+     * still shows that old waiting: it is the next state that tells how this
+     * attempt went.
+     */
+    private suspend fun JobHandle<*>.awaitAttempt(initial: JobState<*>) {
+        state.first { state ->
+            state.isFinished || (state is JobState.Waiting && state != initial)
+        }
+    }
+
+    /**
+     * The system wakes the app up within a window, not at the exact minute.
+     * Demanding the whole interval would skip every wake-up that came a little
+     * early — and double the period.
+     */
+    private val ScheduleRecord.wakeUpGap: TimeUnit
+        get() = Millis(interval.millis / 2)
+
+    private suspend fun rearmWakeups() {
+        storage.schedules().forEach { record -> wakeups.register(record.id, record.interval) }
+    }
+
+    /**
+     * Starts the work of the schedule if at least [minGap] has passed since its
+     * last run, and marks the run.
+     *
+     * @return the handle of the started job; null if the time has not come,
+     * the schedule is gone, or its kind is unknown to this version of the app —
+     * such a schedule stays, the spec may appear in the next one.
+     */
+    private suspend fun startIfDue(scheduleId: String, minGap: TimeUnit): JobHandle<Any>? {
+        val now = Time.nowGMT.millis
+
+        val due = scheduleMutex.withLock {
+            val record = storage.schedules()
+                .firstOrNull { record -> record.id == scheduleId }
+                ?.takeIf { record -> record.type in specs }
+                ?: return@withLock null
+
+            val lastRunAt = record.lastRunAt?.millis
+
+            // Earlier than the last run means the clock was set back: waiting
+            // for the old time to come again could take days
+            val isDue = lastRunAt == null || now - lastRunAt >= minGap.millis || now < lastRunAt
+            if (!isDue) return@withLock null
+
+            storage.saveSchedule(record.copy(lastRunAt = Millis(now)))
+
+            record
+        } ?: return null
+
+        return startEncoded(specs.getValue(due.type), due.params, due.ownerKey)
+    }
+
+    /** [start] for params known only as stored text. The cast is the same as in [resume]. */
+    @Suppress("UNCHECKED_CAST")
+    private suspend fun startEncoded(
+        spec: JobSpec<*, *>,
+        encodedParams: String,
+        ownerKey: String?
+    ): JobHandle<Any> {
+        val typedSpec = spec as JobSpec<Any, Any>
+
+        return start(typedSpec, json.decodeFromString(typedSpec.paramsSerializer, encodedParams), ownerKey)
     }
 
     /**
