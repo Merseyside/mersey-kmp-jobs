@@ -2,6 +2,11 @@
 
 pluginManagement {
     repositories {
+        maven("https://gitlab.izibook.ru/api/v4/projects/70/packages/maven") {
+            content {
+                includeGroupAndSubgroups("ru.izibook")
+            }
+        }
         google {
             mavenContent {
                 includeGroupAndSubgroups("androidx")
@@ -15,8 +20,14 @@ pluginManagement {
     }
 }
 
+plugins {
+    id("ru.izibook.gitlab-repository") version "1.0.0"
+}
+
 dependencyResolutionManagement {
     repositories {
+        mavenLocal()
+        izibookGitlab()
         google {
             mavenContent {
                 includeGroupAndSubgroups("androidx")
@@ -26,11 +37,10 @@ dependencyResolutionManagement {
         }
         mavenCentral()
         // The version catalogs are published here from ../izidesk-mobile/mersey-libs/catalog-versions
-        mavenLocal()
     }
 
     val group = "io.github.merseyside"
-    val catalogVersions = "1.8.11"
+    val catalogVersions = "1.8.12"
 
     versionCatalogs {
         create("common") { from("$group:catalog-version-common:$catalogVersions") }

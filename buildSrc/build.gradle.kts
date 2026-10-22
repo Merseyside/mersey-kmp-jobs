@@ -9,6 +9,7 @@ plugins {
  */
 dependencies {
     with(catalogGradle) {
+        implementation(mersey.gradlePlugins)
         implementation(android.gradle)
         implementation(kotlin.gradle)
         implementation(kotlin.serialization)

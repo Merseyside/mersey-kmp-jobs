@@ -1,5 +1,13 @@
+@file:Suppress("UnstableApiUsage")
+
+plugins {
+    id("ru.izibook.gitlab-repository")
+}
+
 dependencyResolutionManagement {
     repositories {
+        mavenLocal()
+        izibookGitlab()
         google {
             mavenContent {
                 includeGroupAndSubgroups("androidx")
@@ -8,13 +16,15 @@ dependencyResolutionManagement {
             }
         }
         mavenCentral()
-        mavenLocal()
         gradlePluginPortal()
     }
 
+    val catalogVersions = "1.8.12"
+    val group = "io.github.merseyside"
+
     versionCatalogs {
         create("catalogGradle") {
-            from("io.github.merseyside:catalog-version-gradle:1.8.11")
+            from("$group:catalog-version-gradle:$catalogVersions")
         }
     }
 }
