@@ -40,7 +40,7 @@ dependencyResolutionManagement {
     }
 
     val group = "io.github.merseyside"
-    val catalogVersions = "1.8.16"
+    val catalogVersions = "1.8.17"
 
     versionCatalogs {
         create("common") { from("$group:catalog-version-common:$catalogVersions") }
